@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Türkçe Kelimeler</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!--
+  ╔═══════════════════════════════════════════════════════════════╗
+  ║  EJECUTA ESTE SQL EN SUPABASE (Dashboard → SQL Editor)        ║
+  ╠═══════════════════════════════════════════════════════════════╣
+
+  -- Tabla de usuarios con PIN y puntos
+  CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    pin TEXT NOT NULL,
+    points INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
+  ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "users_all" ON users FOR ALL USING (true) WITH CHECK (true);
+
+  -- Logros
+  CREATE TABLE IF NOT EXISTS achievements (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL,
+    achievement_key TEXT NOT NULL,
+    unlocked_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(username, achievement_key)
+  );
+  ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "achiev_all" ON achievements FOR ALL USING (true) WITH CHECK (true);
+
+  -- Duelos
+  CREATE TABLE IF NOT EXISTS duels (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    word_id UUID REFERENCES words(id) ON DELETE CASCADE,
+    challenger TEXT NOT NULL,
+    opponent TEXT NOT NULL,
+    challenger_correct BOOLEAN,
+    opponent_correct BOOLEAN,
+    challenger_time INTEGER,
+    opponent_time INTEGER,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
+  ALTER TABLE duels ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "duels_all" ON duels FOR ALL USING (true) WITH CHECK (true);
+
+  -- Columnas de seguimiento de errores en progress
+  ALTER TABLE progress ADD COLUMN IF NOT EXISTS correct_count INTEGER DEFAULT 0;
+  ALTER TABLE progress ADD COLUMN IF NOT EXISTS attempt_count INTEGER DEFAULT 0;
+
+  ╚═══════════════════════════════════════════════════════════════╝
+-->
+
+<style>
+:root {
+  --lapis: #0D1F3C;
+  --lapis-mid: #162d55;
+  --lapis-light: #1E3A6E;
+  --gold: #C9923A;
+  --gold-light: #E5B870;
+  --gold-pale: #F5E6C8;
+  --turq: #1B7676;
+  --turq-light: #2A9E9E;
+  --ivory: #F7F2E8;
+  --crimson: #7A1E2E;
+  --crimson-light: #C04060;
+  --text-on-dark: #E8DFC8;
+  --text-muted: #8A9BB5;
+  --border-dark: rgba(201,146,58,0.22);
+  --shadow-deep: 0 8px 40px rgba(13,31,60,0.5);
+  --level-color: #CD7F32;
+  --level-bg: rgba(205,127,50,0.15);
+  --level-border: rgba(205,127,50,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Mulish', sans-serif;
+  background: var(--lapis);
+  color: var(--text-on-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 0 L50 10 L80 10 L80 20 L70 30 L80 40 L70 30 L80 20 L80 10 L50 10 Z' fill='none' stroke='rgba(201,146,58,0.06)' stroke-width='0.7'/%3E%3Ccircle cx='40' cy='40' r='10' fill='none' stroke='rgba(201,146,58,0.05)' stroke-width='0.6'/%3E%3Crect x='33' y='33' width='14' height='14' transform='rotate(45 40 40)' fill='none' stroke='rgba(201,146,58,0.04)' stroke-width='0.6'/%3E%3Cline x1='0' y1='0' x2='80' y2='80' stroke='rgba(201,146,58,0.025)' stroke-width='0.4'/%3E%3Cline x1='80' y1='0' x2='0' y2='80' stroke='rgba(201,146,58,0.025)' stroke-width='0.4'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════ LOGIN ═══════════════ */
+#login-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 90; padding: 24px;
+}
+.login-card { max-width: 400px; width: 100%; position: relative; z-index: 1; text-align: center; }
+.star-svg { width: 56px; height: 56px; margin: 0 auto 14px; display: block; }
+.login-card h1 {
+  font-family: 'Amiri', serif; font-size: 3rem; font-weight: 700;
+  color: var(--gold-light); letter-spacing: 0.04em; line-height: 1;
+  margin-bottom: 4px; text-shadow: 0 2px 20px rgba(201,146,58,0.4);
+}
+.login-tagline { color: var(--text-muted); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; margin-bottom: 28px; }
+.login-frame {
+  background: rgba(22,45,85,0.88); border: 1px solid var(--border-dark); border-radius: 16px;
+  padding: 28px 24px; backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(201,146,58,0.12);
+}
+.login-step { transition: opacity 0.2s; }
+.login-step.hidden { display: none; }
+.login-label { display: block; text-align: left; margin-bottom: 7px; font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--gold); opacity: 0.85; }
+.login-frame input[type=text] {
+  width: 100%; background: rgba(13,31,60,0.7); border: 1.5px solid var(--border-dark); border-radius: 10px;
+  padding: 13px 16px; font-family: 'Mulish', sans-serif; font-size: 15px; color: var(--ivory); margin-bottom: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.login-frame input::placeholder { color: rgba(138,155,181,0.5); }
+.login-frame input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,58,0.14); }
+
+/* PIN dots */
+.pin-dots { display: flex; justify-content: center; gap: 14px; margin: 18px 0 22px; }
+.pin-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(201,146,58,0.12); border: 2px solid var(--border-dark);
+  transition: all 0.2s;
+}
+.pin-dot.filled { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 10px rgba(201,146,58,0.5); }
+.pin-dot.error { background: var(--crimson-light); border-color: var(--crimson-light); animation: shake 0.35s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+
+/* PIN numpad */
+.pin-numpad {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px;
+}
+.pin-btn {
+  background: rgba(22,45,85,0.8); border: 1px solid var(--border-dark); border-radius: 12px;
+  padding: 16px 10px; font-family: 'Mulish', sans-serif; font-size: 18px; font-weight: 700;
+  color: var(--text-on-dark); cursor: pointer; transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.pin-btn:hover { background: rgba(201,146,58,0.15); border-color: var(--gold); color: var(--gold-light); }
+.pin-btn:active { transform: scale(0.95); }
+.pin-btn-sub { font-size: 8px; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 600; }
+.pin-del { grid-column: 3; background: rgba(122,30,46,0.15); border-color: rgba(122,30,46,0.25); color: var(--crimson-light); font-size: 20px; }
+.pin-del:hover { background: rgba(122,30,46,0.3); border-color: var(--crimson-light); }
+.pin-zero { grid-column: 2; }
+.login-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.login-hint strong { color: var(--gold-light); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  color: var(--lapis); border: none; border-radius: 10px;
+  padding: 13px 28px; font-family: 'Mulish', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; width: 100%;
+  transition: transform 0.15s, box-shadow 0.15s; letter-spacing: 0.04em;
+  box-shadow: 0 4px 18px rgba(201,146,58,0.35);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,146,58,0.45); }
+.btn-gold:active { transform: none; }
+.login-back { background: none; border: none; color: var(--text-muted); font-family: 'Mulish', sans-serif; font-size: 13px; cursor: pointer; margin-top: 12px; text-decoration: underline; }
+.login-back:hover { color: var(--gold); }
+.login-error { color: var(--crimson-light); font-size: 13px; margin-top: 10px; display: block; min-height: 18px; }
+
+/* ═══════════════ APP ═══════════════ */
+#app { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 0 20px 90px; }
+
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0 0; margin-bottom: 22px; flex-wrap: wrap; gap: 10px;
+}
+.app-logo { font-family: 'Amiri', serif; font-size: 1.55rem; font-weight: 700; color: var(--gold-light); letter-spacing: 0.06em; text-shadow: 0 1px 10px rgba(201,146,58,0.3); }
+.header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.level-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  background: var(--level-bg); border: 1px solid var(--level-border);
+  font-size: 12px; font-weight: 700; color: var(--level-color);
+  letter-spacing: 0.06em; transition: all 0.4s;
+}
+.level-pts { font-size: 11px; opacity: 0.8; }
+
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(22,45,85,0.7); border: 1px solid var(--border-dark); border-radius: 20px;
+  padding: 5px 12px 5px 6px;
+}
+.user-avatar { width: 27px; height: 27px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--turq)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--lapis); }
+.user-name { font-size: 13px; font-weight: 600; }
+.btn-logout { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 12px; font-family: 'Mulish', sans-serif; padding: 4px 8px; border-radius: 6px; transition: color 0.2s; margin-left: 4px; }
+.btn-logout:hover { color: var(--gold); }
+
+/* ═══════════════ NAV ═══════════════ */
+.nav-tabs {
+  display: flex; gap: 3px; background: rgba(13,31,60,0.55); border: 1px solid var(--border-dark);
+  border-radius: 13px; padding: 4px; margin-bottom: 26px;
+}
+.nav-tab {
+  flex: 1; padding: 10px 6px; border: none; background: none; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); border-radius: 10px; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;
+}
+.nav-tab.active { background: var(--lapis-light); color: var(--gold-light); box-shadow: 0 2px 10px rgba(13,31,60,0.4), inset 0 1px 0 rgba(201,146,58,0.12); }
+.due-badge { background: var(--crimson); color: white; border-radius: 10px; padding: 1px 6px; font-size: 11px; font-weight: 700; min-width: 18px; text-align: center; display: none; }
+
+/* ═══════════════ MOBILE NAV ═══════════════ */
+.mobile-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  background: rgba(13,28,55,0.97); border-top: 1px solid var(--border-dark);
+  backdrop-filter: blur(14px); padding: 8px 4px 12px;
+}
+.mobile-nav-inner { display: flex; justify-content: space-around; max-width: 480px; margin: 0 auto; }
+.mob-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; cursor: pointer; padding: 6px 10px;
+  font-family: 'Mulish', sans-serif; font-size: 10px; font-weight: 600;
+  color: var(--text-muted); border-radius: 10px; transition: all 0.2s; min-width: 52px;
+}
+.mob-tab .mob-icon { font-size: 20px; line-height: 1; position: relative; }
+.mob-tab.active { color: var(--gold-light); }
+.mob-tab.active .mob-icon::after {
+  content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: var(--gold);
+}
+
+/* ═══════════════ SECTIONS ═══════════════ */
+.section { animation: fadeUp 0.28s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.panel {
+  background: rgba(22,45,85,0.72); border: 1px solid var(--border-dark); border-radius: 16px;
+  backdrop-filter: blur(8px); box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(201,146,58,0.08);
+}
+
+/* ═══════════════ STUDY ═══════════════ */
+.study-header { text-align: center; margin-bottom: 18px; }
+.study-counter { font-family: 'Amiri', serif; font-size: 1.35rem; color: var(--gold-light); margin-bottom: 6px; }
+.study-chips { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 2px 11px; border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+.chip-mode { background: rgba(201,146,58,0.14); border: 1px solid rgba(201,146,58,0.3); color: var(--gold); }
+.chip-dir { background: rgba(27,118,118,0.18); border: 1px solid rgba(27,118,118,0.4); color: var(--turq-light); }
+.chip-pts { background: rgba(124,184,124,0.14); border: 1px solid rgba(124,184,124,0.3); color: #7CB87C; }
+
+.progress-track { height: 3px; background: rgba(201,146,58,0.12); border-radius: 3px; margin-bottom: 22px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--turq-light)); border-radius: 3px; transition: width 0.5s ease; }
+
+/* 3D Flip Card */
+.flip-container { perspective: 1000px; width: 100%; }
+.flip-card-inner {
+  position: relative; width: 100%; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  transform-style: preserve-3d;
+}
+.flip-card-inner.flipped { transform: rotateY(180deg); }
+.flip-face {
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  width: 100%;
+}
+.flip-face-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+
+.study-card { padding: 44px 36px 36px; text-align: center; position: relative; overflow: hidden; }
+.study-card::before, .study-card::after {
+  content: ''; position: absolute; width: 56px; height: 56px; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M28 2 L34 14 L48 8 L42 22 L54 28 L42 34 L48 48 L34 42 L28 54 L22 42 L8 48 L14 34 L2 28 L14 22 L8 8 L22 14 Z' fill='none' stroke='rgba(201,146,58,0.35)' stroke-width='1.2'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.study-card::before { top: -12px; left: -12px; }
+.study-card::after { bottom: -12px; right: -12px; transform: rotate(180deg); }
+
+.card-lang { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); opacity: 0.75; margin-bottom: 12px; }
+.card-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--turq-light); background: rgba(27,118,118,0.18); border: 1px solid rgba(27,118,118,0.3); display: inline-block; padding: 3px 12px; border-radius: 10px; margin-bottom: 10px; }
+.card-word { font-family: 'Amiri', serif; font-size: 3.2rem; font-weight: 700; color: var(--ivory); line-height: 1.1; margin-bottom: 8px; text-shadow: 0 2px 16px rgba(0,0,0,0.3); }
+.card-example { font-family: 'Amiri', serif; font-style: italic; font-size: 1.05rem; color: rgba(232,223,200,0.5); margin-top: 10px; line-height: 1.5; }
+.card-divider { color: rgba(201,146,58,0.35); margin: 16px 0 0; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.card-divider::before, .card-divider::after { content: ''; width: 60px; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,146,58,0.25), transparent); }
+
+/* TTS Button */
+.btn-tts {
+  background: rgba(27,118,118,0.15); border: 1px solid rgba(27,118,118,0.3); color: var(--turq-light);
+  border-radius: 8px; padding: 5px 10px; font-size: 16px; cursor: pointer; transition: all 0.15s;
+  vertical-align: middle; margin-left: 8px;
+}
+.btn-tts:hover { background: rgba(27,118,118,0.3); }
+
+/* MC */
+.mc-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 24px auto 0; max-width: 440px; }
+.mc-opt {
+  background: rgba(13,31,60,0.55); border: 1.5px solid var(--border-dark); border-radius: 12px;
+  padding: 14px 12px; cursor: pointer; font-family: 'Mulish', sans-serif; font-size: 14px;
+  font-weight: 500; color: var(--text-on-dark); transition: all 0.15s; text-align: center;
+}
+.mc-opt:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-light); background: rgba(201,146,58,0.1); }
+.mc-opt.ok { border-color: var(--turq-light); color: var(--turq-light); background: rgba(27,118,118,0.14); }
+.mc-opt.no { border-color: var(--crimson-light); color: var(--crimson-light); background: rgba(192,64,96,0.12); }
+
+/* Written */
+.written-wrap { margin: 24px auto 0; max-width: 360px; }
+.written-input {
+  width: 100%; padding: 13px 16px; text-align: center;
+  background: rgba(13,31,60,0.6); border: 1.5px solid var(--border-dark); border-radius: 12px;
+  font-family: 'Mulish', sans-serif; font-size: 1rem; color: var(--ivory); margin-bottom: 11px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.written-input::placeholder { color: rgba(138,155,181,0.4); }
+.written-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,58,0.12); }
+.written-input.ok { border-color: var(--turq-light); background: rgba(27,118,118,0.1); }
+.written-input.no { border-color: var(--crimson-light); background: rgba(192,64,96,0.1); }
+.written-fb { font-size: 13px; margin-top: 4px; font-weight: 600; }
+.written-fb.ok { color: var(--turq-light); } .written-fb.no { color: #E87070; }
+
+/* Reveal & rating */
+.btn-reveal { background: rgba(201,146,58,0.13); border: 1.5px solid var(--gold); color: var(--gold-light); border-radius: 12px; padding: 12px 30px; font-family: 'Mulish', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; margin-top: 24px; letter-spacing: 0.04em; }
+.btn-reveal:hover { background: rgba(201,146,58,0.22); }
+.answer-reveal { background: rgba(13,31,60,0.5); border: 1px solid var(--border-dark); border-radius: 14px; padding: 18px 22px; margin: 18px auto 0; max-width: 360px; }
+.answer-word { font-family: 'Amiri', serif; font-size: 1.9rem; font-weight: 700; color: var(--gold-light); margin-bottom: 4px; }
+.answer-note { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+.rating-wrap { display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+.btn-rate { padding: 9px 14px; border-radius: 10px; cursor: pointer; font-family: 'Mulish', sans-serif; font-size: 12.5px; font-weight: 700; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 68px; }
+.rl { font-size: 10px; font-weight: 500; opacity: 0.7; }
+.r0 { border: 1.5px solid #E87070; color: #E87070; background: rgba(232,112,112,0.08); }
+.r0:hover { background: rgba(232,112,112,0.18); }
+.r1 { border: 1.5px solid var(--gold); color: var(--gold); background: rgba(201,146,58,0.08); }
+.r1:hover { background: rgba(201,146,58,0.18); }
+.r2 { border: 1.5px solid #7CB87C; color: #7CB87C; background: rgba(124,184,124,0.08); }
+.r2:hover { background: rgba(124,184,124,0.18); }
+.r3 { border: 1.5px solid var(--turq-light); color: var(--turq-light); background: rgba(42,158,158,0.08); }
+.r3:hover { background: rgba(42,158,158,0.18); }
+
+/* Points popup */
+.pts-popup {
+  position: absolute; top: 10px; right: 16px;
+  font-family: 'Amiri', serif; font-size: 1.2rem; font-weight: 700;
+  color: #7CB87C; pointer-events: none; z-index: 10;
+  animation: ptsFly 1.2s ease forwards;
+}
+@keyframes ptsFly { 0%{opacity:0;transform:translateY(0) scale(0.8)} 20%{opacity:1;transform:translateY(-6px) scale(1.1)} 80%{opacity:1;transform:translateY(-28px) scale(1)} 100%{opacity:0;transform:translateY(-40px)} }
+
+/* Study empty */
+.study-empty { text-align: center; padding: 60px 24px; }
+.empty-icon { font-size: 2.8rem; margin-bottom: 14px; }
+.empty-title { font-family: 'Amiri', serif; font-size: 1.75rem; color: var(--gold-light); margin-bottom: 10px; }
+.empty-body { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+
+/* ═══════════════ ERROR HISTORY ═══════════════ */
+.err-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.err-top h2 { font-family: 'Amiri', serif; font-size: 1.45rem; color: var(--gold-light); }
+.error-list { display: flex; flex-direction: column; gap: 8px; }
+.err-item {
+  background: rgba(13,31,60,0.4); border: 1px solid var(--border-dark); border-radius: 12px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 14px;
+}
+.err-item:hover { border-color: rgba(192,64,96,0.35); background: rgba(13,31,60,0.6); }
+.err-words { flex: 1; }
+.err-tr { font-family: 'Amiri', serif; font-size: 1.1rem; font-weight: 700; color: var(--ivory); }
+.err-es { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.err-right { text-align: right; flex-shrink: 0; }
+.err-rate { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px; }
+.err-bar-wrap { width: 80px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.err-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #7CB87C, #E87070); transition: width 0.5s; }
+
+/* ═══════════════ DUEL ═══════════════ */
+.duel-top { margin-bottom: 22px; }
+.duel-top h2 { font-family: 'Amiri', serif; font-size: 1.45rem; color: var(--gold-light); margin-bottom: 6px; }
+.duel-top p { font-size: 13px; color: var(--text-muted); }
+.duel-sec { font-family: 'Amiri', serif; font-size: 1.05rem; color: var(--gold); margin: 20px 0 12px; display: flex; align-items: center; gap: 10px; }
+.duel-sec::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-dark), transparent); }
+.duel-challenge-form { padding: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.duel-challenge-form .form-field { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 5px; }
+.duel-challenge-form label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); opacity: 0.8; }
+.duel-challenge-form input { background: rgba(13,31,60,0.65); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-family: 'Mulish', sans-serif; font-size: 14px; color: var(--ivory); }
+.duel-challenge-form input:focus { outline: none; border-color: var(--gold); }
+.duel-list { display: flex; flex-direction: column; gap: 8px; }
+.duel-item {
+  background: rgba(13,31,60,0.4); border: 1px solid var(--border-dark); border-radius: 12px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.duel-word { font-family: 'Amiri', serif; font-size: 1.1rem; font-weight: 700; color: var(--ivory); }
+.duel-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.duel-badge { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.db-win { background: rgba(124,184,124,0.18); color: #7CB87C; border: 1px solid rgba(124,184,124,0.3); }
+.db-lose { background: rgba(232,112,112,0.15); color: #E87070; border: 1px solid rgba(232,112,112,0.25); }
+.db-tie { background: rgba(201,146,58,0.14); color: var(--gold); border: 1px solid rgba(201,146,58,0.3); }
+.db-pending { background: rgba(138,155,181,0.14); color: var(--text-muted); border: 1px solid rgba(138,155,181,0.25); }
+.duel-ans-area { width: 100%; margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+.duel-ans-input { flex: 1; background: rgba(13,31,60,0.6); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 9px 12px; font-family: 'Mulish', sans-serif; font-size: 14px; color: var(--ivory); }
+.duel-ans-input:focus { outline: none; border-color: var(--gold); }
+.duel-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+
+/* ═══════════════ LIBRARY ═══════════════ */
+.lib-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.lib-top h2 { font-family: 'Amiri', serif; font-size: 1.45rem; color: var(--gold-light); }
+.lib-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-ghost { background: rgba(13,31,60,0.4); border: 1px solid var(--border-dark); color: var(--text-on-dark); border-radius: 8px; padding: 8px 13px; font-family: 'Mulish', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold-light); }
+.add-word-panel { margin-bottom: 18px; max-height: 0; overflow: hidden; transition: max-height 0.38s ease, opacity 0.3s; opacity: 0; }
+.add-word-panel.open { max-height: 650px; opacity: 1; }
+.add-word-inner { padding: 22px; }
+.panel-title { font-family: 'Amiri', serif; font-size: 1.15rem; color: var(--gold-light); margin-bottom: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.panel-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-dark), transparent); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-field label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); opacity: 0.8; }
+.form-field input, .form-field select { background: rgba(13,31,60,0.65); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-family: 'Mulish', sans-serif; font-size: 14px; color: var(--ivory); transition: border-color 0.2s; }
+.form-field input::placeholder { color: rgba(138,155,181,0.38); }
+.form-field input:focus, .form-field select:focus { outline: none; border-color: var(--gold); }
+.form-field select option { background: var(--lapis-mid); }
+.form-field.full { grid-column: 1 / -1; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-cancel { background: none; border: 1px solid var(--border-dark); color: var(--text-muted); border-radius: 8px; padding: 9px 18px; font-family: 'Mulish', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-cancel:hover { border-color: var(--text-muted); color: var(--text-on-dark); }
+.lib-filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 180px; background: rgba(13,31,60,0.5); border: 1px solid var(--border-dark); border-radius: 8px; padding: 9px 13px; font-family: 'Mulish', sans-serif; font-size: 14px; color: var(--ivory); }
+.search-input::placeholder { color: rgba(138,155,181,0.4); }
+.search-input:focus { outline: none; border-color: var(--gold); }
+.filter-sel { background: rgba(13,31,60,0.5); border: 1px solid var(--border-dark); border-radius: 8px; padding: 9px 12px; font-family: 'Mulish', sans-serif; font-size: 13px; color: var(--text-on-dark); cursor: pointer; }
+.filter-sel option { background: var(--lapis-mid); }
+.word-list { display: flex; flex-direction: column; gap: 6px; }
+.word-item { background: rgba(13,31,60,0.35); border: 1px solid var(--border-dark); border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; gap: 13px; transition: background 0.15s, border-color 0.15s; }
+.word-item:hover { background: rgba(13,31,60,0.55); border-color: rgba(201,146,58,0.35); }
+.w-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dn { background: rgba(138,155,181,0.4); border: 1px solid rgba(138,155,181,0.3); }
+.dl { background: var(--gold); }
+.dr { background: var(--turq-light); }
+.dm { background: #7CB87C; }
+.word-main { flex: 1; }
+.word-tr { font-family: 'Amiri', serif; font-size: 1.12rem; font-weight: 700; color: var(--ivory); }
+.word-es { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
+.word-meta { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.cat-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 8px; background: rgba(27,118,118,0.18); color: var(--turq-light); border: 1px solid rgba(27,118,118,0.28); }
+.btn-icon { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; font-size: 14px; line-height: 1; transition: color 0.15s, background 0.15s; }
+.btn-icon:hover { color: var(--gold-light); background: rgba(201,146,58,0.1); }
+.btn-icon.del:hover { color: #E87070; background: rgba(232,112,112,0.1); }
+.word-empty { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.8; }
+
+/* ═══════════════ DASHBOARD ═══════════════ */
+.dash-title { font-family: 'Amiri', serif; font-size: 1.45rem; color: var(--gold-light); margin-bottom: 22px; }
+.stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 11px; margin-bottom: 22px; }
+@media (min-width:500px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
+.stat-card { border-radius: 14px; padding: 20px 16px; text-align: center; }
+.sg { background: rgba(201,146,58,0.1); border: 1px solid rgba(201,146,58,0.22); }
+.st { background: rgba(27,118,118,0.1); border: 1px solid rgba(27,118,118,0.22); }
+.sv { background: rgba(124,184,124,0.08); border: 1px solid rgba(124,184,124,0.18); }
+.sc { background: rgba(122,30,46,0.12); border: 1px solid rgba(122,30,46,0.22); }
+.stat-number { font-family: 'Amiri', serif; font-size: 2.4rem; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.sg .stat-number { color: var(--gold-light); }
+.st .stat-number { color: var(--turq-light); }
+.sv .stat-number { color: #7CB87C; }
+.sc .stat-number { color: var(--crimson-light); }
+.stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.dash-sec { margin: 22px 0 13px; font-family: 'Amiri', serif; font-size: 1.1rem; color: var(--gold); display: flex; align-items: center; gap: 12px; }
+.dash-sec::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-dark), transparent); }
+.streak-card { padding: 18px 22px; display: flex; align-items: center; gap: 16px; }
+.streak-flame { font-size: 2.2rem; }
+.streak-num { font-family: 'Amiri', serif; font-size: 2.1rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+.streak-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.dist-wrap { padding: 18px 22px; }
+.dist-bar { height: 15px; border-radius: 8px; overflow: hidden; display: flex; margin-bottom: 11px; background: rgba(13,31,60,0.5); }
+.dist-seg { height: 100%; transition: width 0.6s ease; }
+.dist-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Leaderboard */
+.lb-list { display: flex; flex-direction: column; gap: 6px; }
+.lb-item { background: rgba(13,31,60,0.4); border: 1px solid var(--border-dark); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 13px; }
+.lb-item.me { border-color: var(--gold); background: rgba(201,146,58,0.08); }
+.lb-rank { font-family: 'Amiri', serif; font-size: 1.3rem; font-weight: 700; color: var(--text-muted); width: 28px; text-align: center; flex-shrink: 0; }
+.lb-rank.top { color: var(--gold-light); }
+.lb-name { flex: 1; font-weight: 600; font-size: 14px; }
+.lb-level { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+.lb-pts { font-family: 'Amiri', serif; font-size: 1.2rem; font-weight: 700; color: var(--gold-light); }
+
+/* Achievements grid */
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px; }
+.ach-item { background: rgba(13,31,60,0.4); border: 1px solid var(--border-dark); border-radius: 12px; padding: 14px 12px; text-align: center; transition: all 0.2s; }
+.ach-item.unlocked { border-color: rgba(201,146,58,0.4); background: rgba(201,146,58,0.06); }
+.ach-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.ach-name { font-size: 11px; font-weight: 700; color: var(--text-muted); line-height: 1.3; }
+.ach-item.unlocked .ach-name { color: var(--gold-light); }
+.ach-item:not(.unlocked) { opacity: 0.45; filter: grayscale(0.6); }
+
+/* ═══════════════ ACHIEVEMENT NOTIFICATION ═══════════════ */
+.ach-notify {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120%);
+  z-index: 600; max-width: 340px; width: 90%;
+  background: rgba(14,32,62,0.96); border: 1px solid rgba(201,146,58,0.5);
+  border-radius: 16px; padding: 16px 20px; backdrop-filter: blur(12px);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+  display: flex; align-items: center; gap: 14px;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.ach-notify.show { transform: translateX(-50%) translateY(0); }
+.ach-notify-icon { font-size: 2.2rem; flex-shrink: 0; }
+.ach-notify-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+.ach-notify-name { font-family: 'Amiri', serif; font-size: 1.15rem; color: var(--ivory); font-weight: 700; }
+.ach-notify-desc { font-size: 12px; color: var(--text-muted); }
+
+/* ═══════════════ LEVEL UP ═══════════════ */
+.levelup-overlay {
+  position: fixed; inset: 0; z-index: 700; background: rgba(13,31,60,0.85);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.levelup-overlay.show { opacity: 1; pointer-events: auto; }
+.levelup-card { text-align: center; padding: 40px 32px; max-width: 340px; width: 90%; border-radius: 20px; }
+.levelup-star { font-size: 3.5rem; margin-bottom: 10px; animation: spin1 0.8s ease; }
+@keyframes spin1 { from{transform:rotate(-30deg) scale(0.5)} to{transform:rotate(0) scale(1)} }
+.levelup-label { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.levelup-name { font-family: 'Amiri', serif; font-size: 2.8rem; font-weight: 700; margin-bottom: 14px; }
+.levelup-close { margin-top: 20px; }
+
+/* ═══════════════ SESSION SUMMARY ═══════════════ */
+.summary-overlay {
+  position: fixed; inset: 0; z-index: 650; background: rgba(13,31,60,0.88);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.summary-overlay.show { opacity: 1; pointer-events: auto; }
+.summary-card { max-width: 380px; width: 100%; text-align: center; border-radius: 20px; padding: 36px 28px; }
+.summary-title { font-family: 'Amiri', serif; font-size: 2rem; color: var(--gold-light); margin-bottom: 6px; }
+.summary-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 26px; }
+.summary-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+.ss-item { background: rgba(13,31,60,0.5); border: 1px solid var(--border-dark); border-radius: 12px; padding: 14px 8px; }
+.ss-num { font-family: 'Amiri', serif; font-size: 2rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+.ss-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-top: 4px; }
+
+/* ═══════════════ CONFETTI ═══════════════ */
+#confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 800; }
+
+/* ═══════════════ UTILITIES ═══════════════ */
+.btn-teal { background: rgba(27,118,118,0.25); border: 1.5px solid var(--turq-light); color: var(--turq-light); border-radius: 10px; padding: 11px 22px; font-family: 'Mulish', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+.btn-teal:hover { background: rgba(27,118,118,0.4); }
+.loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+.spinner { width: 30px; height: 30px; border: 2px solid rgba(201,146,58,0.18); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--lapis-mid); border: 1px solid var(--border-dark); color: var(--text-on-dark); padding: 11px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 600; z-index: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; box-shadow: var(--shadow-deep); }
+.toast.show { opacity: 1; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(13,31,60,0.82); backdrop-filter: blur(5px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal { max-width: 450px; width: 100%; border-radius: 16px; padding: 30px; box-shadow: var(--shadow-deep); }
+.modal h3 { font-family: 'Amiri', serif; font-size: 1.35rem; color: var(--gold-light); margin-bottom: 8px; }
+.modal p { font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+.modal textarea { width: 100%; height: 110px; resize: none; background: rgba(13,31,60,0.65); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 12px; color: var(--ivory); margin-bottom: 12px; }
+.modal textarea:focus { outline: none; border-color: var(--gold); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media (max-width: 600px) {
+  #app { padding: 0 16px 80px; }
+  .nav-tabs { display: none; }
+  .mobile-nav { display: block; }
+  .study-card { padding: 30px 18px 26px; }
+  .card-word { font-size: 2.4rem; }
+  .mc-opts { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-field.full { grid-column: 1; }
+  .header-right { gap: 6px; }
+  .level-pts { display: none; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+}
+
+@media (max-width: 380px) {
+  .app-logo { font-size: 1.25rem; }
+  .login-card h1 { font-size: 2.5rem; }
+  .pin-numpad { gap: 7px; }
+  .pin-btn { padding: 13px 8px; font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- CONFETTI CANVAS -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ACHIEVEMENT NOTIFICATION -->
+<div class="ach-notify" id="ach-notify">
+  <div class="ach-notify-icon" id="ach-notify-icon">🏆</div>
+  <div>
+    <div class="ach-notify-label">Logro desbloqueado</div>
+    <div class="ach-notify-name" id="ach-notify-name"></div>
+    <div class="ach-notify-desc" id="ach-notify-desc"></div>
+  </div>
+</div>
+
+<!-- LEVEL UP OVERLAY -->
+<div class="levelup-overlay" id="levelup-overlay" onclick="closeLevelUp()">
+  <div class="panel levelup-card" id="levelup-card">
+    <div class="levelup-star">✦</div>
+    <div class="levelup-label">¡Subiste de nivel!</div>
+    <div class="levelup-name" id="levelup-name"></div>
+    <div style="font-size:13px;color:var(--text-muted)" id="levelup-pts"></div>
+    <button class="btn-gold levelup-close" onclick="closeLevelUp()">¡Adelante!</button>
+  </div>
+</div>
+
+<!-- SESSION SUMMARY OVERLAY -->
+<div class="summary-overlay" id="summary-overlay">
+  <div class="panel summary-card">
+    <div class="summary-title" id="sum-title">Sesión completada</div>
+    <div class="summary-sub" id="sum-sub"></div>
+    <div class="summary-stats">
+      <div class="ss-item"><div class="ss-num" id="sum-reviewed">0</div><div class="ss-lbl">Vistas</div></div>
+      <div class="ss-item"><div class="ss-num" id="sum-correct">0</div><div class="ss-lbl">Correctas</div></div>
+      <div class="ss-item"><div class="ss-num" id="sum-pts">0</div><div class="ss-lbl">Puntos</div></div>
+    </div>
+    <button class="btn-gold" onclick="closeSummary()">Continuar →</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <svg class="star-svg" viewBox="0 0 56 56" fill="none">
+      <path d="M28 3 L34 15 L47 9 L41 22 L53 28 L41 34 L47 47 L34 41 L28 53 L22 41 L9 47 L15 34 L3 28 L15 22 L9 9 L22 15 Z" fill="none" stroke="#C9923A" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M28 13 L32.5 22 L43 25.5 L35.5 33 L37.5 44 L28 39.5 L18.5 44 L20.5 33 L13 25.5 L23.5 22 Z" fill="rgba(201,146,58,0.12)" stroke="rgba(201,146,58,0.6)" stroke-width="0.7"/>
+      <circle cx="28" cy="28" r="4.5" fill="rgba(201,146,58,0.25)" stroke="#C9923A" stroke-width="0.9"/>
+    </svg>
+    <h1>Türkçe</h1>
+    <p class="login-tagline">vocabulario · español &amp; turco</p>
+    <div class="login-frame">
+      <!-- Step 1: username -->
+      <div class="login-step" id="login-step1">
+        <label class="login-label">Tu nombre de usuario</label>
+        <input type="text" id="username-input" placeholder="ör. fatma, brandon, ali..." maxlength="30" autocomplete="off">
+        <span class="login-error" id="login-error"></span>
+        <button class="btn-gold" onclick="continueUsername()">Continuar →</button>
+      </div>
+      <!-- Step 2: PIN -->
+      <div class="login-step hidden" id="login-step2">
+        <div class="login-hint">Hola, <strong id="pin-username-label"></strong></div>
+        <div class="login-hint" id="pin-action-hint"></div>
+        <div class="pin-dots">
+          <div class="pin-dot" id="pd0"></div>
+          <div class="pin-dot" id="pd1"></div>
+          <div class="pin-dot" id="pd2"></div>
+          <div class="pin-dot" id="pd3"></div>
+        </div>
+        <div class="pin-numpad">
+          <button class="pin-btn" onclick="pinDigit('1')">1<span class="pin-btn-sub"></span></button>
+          <button class="pin-btn" onclick="pinDigit('2')">2<span class="pin-btn-sub">ABC</span></button>
+          <button class="pin-btn" onclick="pinDigit('3')">3<span class="pin-btn-sub">DEF</span></button>
+          <button class="pin-btn" onclick="pinDigit('4')">4<span class="pin-btn-sub">GHI</span></button>
+          <button class="pin-btn" onclick="pinDigit('5')">5<span class="pin-btn-sub">JKL</span></button>
+          <button class="pin-btn" onclick="pinDigit('6')">6<span class="pin-btn-sub">MNO</span></button>
+          <button class="pin-btn" onclick="pinDigit('7')">7<span class="pin-btn-sub">PRS</span></button>
+          <button class="pin-btn" onclick="pinDigit('8')">8<span class="pin-btn-sub">TUV</span></button>
+          <button class="pin-btn" onclick="pinDigit('9')">9<span class="pin-btn-sub">WXY</span></button>
+          <button class="pin-btn" style="visibility:hidden"></button>
+          <button class="pin-btn pin-zero" onclick="pinDigit('0')">0</button>
+          <button class="pin-btn pin-del" onclick="pinDelete()">⌫</button>
+        </div>
+        <span class="login-error" id="pin-error"></span>
+        <button class="login-back" onclick="backToUsername()">← Cambiar usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="app-header">
+    <div class="app-logo">✦ Türkçe</div>
+    <div class="header-right">
+      <div class="level-badge" id="level-badge">
+        <span id="level-icon">🥉</span>
+        <span id="level-name">Bronce</span>
+        <span class="level-pts" id="level-pts">0 pts</span>
+      </div>
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="username-display"></span>
+      </div>
+      <button class="btn-logout" onclick="logout()">salir</button>
+    </div>
+  </div>
+
+  <!-- Desktop nav -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-study" onclick="showTab('study')">
+      📖 Estudiar <span class="due-badge" id="due-badge">0</span>
+    </button>
+    <button class="nav-tab" id="tab-errors" onclick="showTab('errors')">📉 Errores</button>
+    <button class="nav-tab" id="tab-duel" onclick="showTab('duel')">⚔️ Duelo</button>
+    <button class="nav-tab" id="tab-library" onclick="showTab('library')">📚 Biblioteca</button>
+    <button class="nav-tab" id="tab-dashboard" onclick="showTab('dashboard')">📊 Progreso</button>
+  </div>
+
+  <!-- STUDY -->
+  <div id="section-study" class="section">
+    <div id="study-loading" class="loading"><div class="spinner"></div>Cargando sesión...</div>
+    <div id="study-content" style="display:none"></div>
+  </div>
+
+  <!-- ERRORS -->
+  <div id="section-errors" class="section" style="display:none">
+    <div class="err-top">
+      <h2>Historial de errores</h2>
+      <button class="btn-gold" style="width:auto;padding:10px 18px;font-size:13px" onclick="startIntensiveMode()">⚡ Modo Intensivo</button>
+    </div>
+    <div id="error-list-content"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- DUEL -->
+  <div id="section-duel" class="section" style="display:none">
+    <div class="duel-top">
+      <h2>Modo Duelo</h2>
+      <p>Desafía a otro usuario. El más rápido y preciso gana.</p>
+    </div>
+    <div class="panel" style="margin-bottom:18px">
+      <div class="duel-challenge-form">
+        <div class="form-field">
+          <label>Desafiar a</label>
+          <input type="text" id="duel-opponent" placeholder="nombre de usuario..." autocomplete="off">
+        </div>
+        <button class="btn-gold" style="width:auto;padding:10px 18px;font-size:13px;align-self:flex-end" onclick="startDuelChallenge()">Desafiar →</button>
+      </div>
+    </div>
+    <div id="duel-content"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div id="section-library" class="section" style="display:none">
+    <div class="lib-top">
+      <h2>Biblioteca de palabras</h2>
+      <div class="lib-actions">
+        <button class="btn-ghost" onclick="openImport()">⬆ Importar</button>
+        <button class="btn-ghost" onclick="exportDeck()">⬇ Exportar</button>
+        <button class="btn-gold" style="width:auto;padding:9px 17px;font-size:13px" onclick="toggleAddForm()">+ Nueva palabra</button>
+      </div>
+    </div>
+    <div class="panel add-word-panel" id="add-word-panel">
+      <div class="add-word-inner">
+        <div class="panel-title" id="form-title">Nueva palabra</div>
+        <input type="hidden" id="edit-word-id">
+        <div class="form-grid">
+          <div class="form-field"><label>Turco *</label><input type="text" id="f-turkish" placeholder="ör. merhaba"></div>
+          <div class="form-field"><label>Español *</label><input type="text" id="f-spanish" placeholder="ej. hola"></div>
+          <div class="form-field"><label>Categoría</label>
+            <select id="f-category">
+              <option value="">Sin categoría</option>
+              <option value="verbo">Verbo</option><option value="sustantivo">Sustantivo</option>
+              <option value="adjetivo">Adjetivo</option><option value="adverbio">Adverbio</option>
+              <option value="expresión">Expresión</option><option value="número">Número</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Nota gramatical</label><input type="text" id="f-grammar" placeholder="ör. raíz: git-"></div>
+          <div class="form-field full"><label>Ejemplo de uso</label><input type="text" id="f-example" placeholder="ör. Merhaba, nasılsın?"></div>
+          <div class="form-field full"><label>Mnemotécnica</label><input type="text" id="f-mnemonic" placeholder="Asociación personal..."></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" onclick="cancelForm()">Cancelar</button>
+          <button class="btn-gold" style="width:auto;padding:10px 22px;font-size:13px" onclick="saveWord()">Guardar</button>
+        </div>
+      </div>
+    </div>
+    <div class="lib-filters">
+      <input type="text" class="search-input" id="lib-search" placeholder="Buscar palabras..." oninput="renderLibrary()">
+      <select class="filter-sel" id="lib-cat" onchange="renderLibrary()">
+        <option value="">Todas</option>
+        <option value="verbo">Verbos</option><option value="sustantivo">Sustantivos</option>
+        <option value="adjetivo">Adjetivos</option><option value="adverbio">Adverbios</option>
+        <option value="expresión">Expresiones</option><option value="número">Números</option>
+        <option value="otro">Otros</option>
+      </select>
+    </div>
+    <div class="word-list" id="word-list"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section" style="display:none">
+    <h2 class="dash-title">Tu progreso</h2>
+    <div id="dashboard-content"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mob-tab active" id="mob-study" onclick="showTab('study')">
+      <span class="mob-icon">📖<span class="due-badge" id="due-badge-mob" style="position:absolute;top:-4px;right:-6px;display:none;font-size:9px;padding:1px 4px"></span></span>
+      <span>Estudiar</span>
+    </button>
+    <button class="mob-tab" id="mob-errors" onclick="showTab('errors')"><span class="mob-icon">📉</span><span>Errores</span></button>
+    <button class="mob-tab" id="mob-duel" onclick="showTab('duel')"><span class="mob-icon">⚔️</span><span>Duelo</span></button>
+    <button class="mob-tab" id="mob-library" onclick="showTab('library')"><span class="mob-icon">📚</span><span>Biblio</span></button>
+    <button class="mob-tab" id="mob-dashboard" onclick="showTab('dashboard')"><span class="mob-icon">📊</span><span>Progreso</span></button>
+  </div>
+</nav>
+
+<!-- MODAL IMPORT -->
+<div class="modal-overlay" id="import-modal" style="display:none" onclick="if(event.target===this)closeImport()">
+  <div class="modal panel">
+    <h3>Importar mazo</h3>
+    <p>Pega el JSON del mazo. Las palabras nuevas se agregan a la biblioteca; las duplicadas se omiten.</p>
+    <textarea id="import-json" placeholder='[{"turkish":"merhaba","spanish":"hola",...}]'></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImport()">Cancelar</button>
+      <button class="btn-gold" style="width:auto;padding:10px 22px;font-size:13px" onclick="importDeck()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://clwwraziutpatlsffdby.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_C5swv9CF3lpzJwpmmgxv8g_09bIQSl3';
+// ════════════════════════════════════════════════════
+
+// ═══ LEVELS ═══
+const LEVELS = [
+  { name:'Bronce',    icon:'🥉', min:0,    color:'#CD7F32', bg:'rgba(205,127,50,0.15)',  border:'rgba(205,127,50,0.4)'  },
+  { name:'Plata',     icon:'🥈', min:200,  color:'#C0C0C0', bg:'rgba(192,192,192,0.15)', border:'rgba(192,192,192,0.4)' },
+  { name:'Oro',       icon:'🥇', min:500,  color:'#FFD700', bg:'rgba(255,215,0,0.15)',   border:'rgba(255,215,0,0.4)'   },
+  { name:'Zafiro',    icon:'💎', min:1000, color:'#4FA8FF', bg:'rgba(79,168,255,0.15)',  border:'rgba(79,168,255,0.4)'  },
+  { name:'Esmeralda', icon:'💚', min:2000, color:'#50C878', bg:'rgba(80,200,120,0.15)',  border:'rgba(80,200,120,0.4)'  },
+  { name:'Rubí',      icon:'❤️‍🔥', min:4000, color:'#FF4466', bg:'rgba(255,68,102,0.15)',  border:'rgba(255,68,102,0.4)'  },
+  { name:'Diamante',  icon:'🌟', min:8000, color:'#B9F2FF', bg:'rgba(185,242,255,0.15)', border:'rgba(185,242,255,0.4)' },
+];
+function getLevel(pts) {
+  for (let i = LEVELS.length-1; i >= 0; i--) if (pts >= LEVELS[i].min) return { ...LEVELS[i], index: i };
+  return { ...LEVELS[0], index: 0 };
+}
+
+// ═══ ACHIEVEMENTS ═══
+const ACHIEV_DEF = {
+  primera_palabra: { icon:'✨', name:'Primera respuesta', desc:'Respondiste tu primera tarjeta' },
+  racha_3:         { icon:'🔥', name:'Racha de fuego',   desc:'3 días consecutivos estudiando' },
+  racha_7:         { icon:'💫', name:'Una semana',        desc:'7 días consecutivos estudiando' },
+  dominar_10:      { icon:'🏅', name:'Décima maestría',   desc:'10 palabras dominadas' },
+  dominar_50:      { icon:'🏆', name:'Gran maestro',      desc:'50 palabras dominadas' },
+  sesion_perfecta: { icon:'⭐', name:'Sesión perfecta',   desc:'Sin errores en toda la sesión' },
+  velocidad:       { icon:'⚡', name:'Relámpago',         desc:'5 respuestas rápidas seguidas (<4 s)' },
+  coleccionista:   { icon:'📚', name:'Coleccionista',     desc:'50 palabras en la biblioteca' },
+  nivel_plata:     { icon:'🥈', name:'Nivel Plata',       desc:'Alcanzaste el nivel Plata' },
+  nivel_oro:       { icon:'🥇', name:'Nivel Oro',         desc:'Alcanzaste el nivel Oro' },
+  nivel_zafiro:    { icon:'💎', name:'Nivel Zafiro',      desc:'Alcanzaste el nivel Zafiro' },
+  nivel_esmeralda: { icon:'💚', name:'Nivel Esmeralda',   desc:'Alcanzaste el nivel Esmeralda' },
+  nivel_rubi:      { icon:'❤️‍🔥', name:'Nivel Rubí',       desc:'Alcanzaste el nivel Rubí' },
+  nivel_diamante:  { icon:'🌟', name:'Nivel Diamante',    desc:'¡Eres un diamante!' },
+  primer_duelo:    { icon:'⚔️', name:'Primera victoria',  desc:'Ganaste tu primer duelo' },
+};
+
+// ═══ STATE ═══
+let sb, currentUser='', allWords=[], userProgress={}, studyQueue=[], studyIndex=0, sessionDir='tr-es';
+let userPoints=0, userAchievements=new Set(), userRecord=null;
+let sessionStats = { reviewed:0, correct:0, points:0, speedCount:0, startTime:0, errors:0 };
+let cardRevealTime=0;
+let pinBuffer='', pinIsNew=false;
+let intensiveMode=false;
+let ALL_TABS = ['study','errors','duel','library','dashboard'];
+
+// ═══ INIT ═══
+window.addEventListener('DOMContentLoaded', () => {
+  if (!SUPABASE_URL.startsWith('http')) {
+    document.getElementById('login-screen').style.display='flex';
+    return;
+  }
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const saved = localStorage.getItem('turkce_user');
+  if (saved) { currentUser=saved; startApp(); }
+  else {
+    document.getElementById('login-screen').style.display='flex';
+    setTimeout(()=>{ const i=document.getElementById('username-input'); if(i)i.addEventListener('keydown',e=>{if(e.key==='Enter')continueUsername();}); },100);
+  }
+});
+
+// ═══ LOGIN / PIN ═══
+async function continueUsername() {
+  const v = document.getElementById('username-input').value.trim().toLowerCase();
+  const err = document.getElementById('login-error');
+  if (v.length < 2) { err.textContent='Mínimo 2 caracteres'; return; }
+  err.textContent='';
+  currentUser = v;
+  // Check if user exists
+  const { data } = await sb.from('users').select('username,points').eq('username',v).maybeSingle();
+  pinIsNew = !data;
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pin-username-label').textContent = v;
+  document.getElementById('pin-action-hint').textContent = pinIsNew ? 'Elige un PIN de 4 dígitos para tu cuenta' : 'Ingresa tu PIN';
+  document.getElementById('login-step1').classList.add('hidden');
+  document.getElementById('login-step2').classList.remove('hidden');
+  document.getElementById('pin-error').textContent='';
+}
+
+function backToUsername() {
+  document.getElementById('login-step1').classList.remove('hidden');
+  document.getElementById('login-step2').classList.add('hidden');
+  pinBuffer=''; updatePinDots();
+}
+
+function pinDigit(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(confirmPIN, 120);
+}
+
+function pinDelete() {
+  if (pinBuffer.length > 0) { pinBuffer=pinBuffer.slice(0,-1); updatePinDots(); }
+}
+
+function updatePinDots() {
+  for (let i=0; i<4; i++) {
+    const d = document.getElementById('pd'+i);
+    d.classList.remove('filled','error');
+    if (i < pinBuffer.length) d.classList.add('filled');
+  }
+}
+
+async function confirmPIN() {
+  const err = document.getElementById('pin-error');
+  if (pinIsNew) {
+    // Create user
+    const { error } = await sb.from('users').insert({ username:currentUser, pin:pinBuffer, points:0 });
+    if (error) { showPinError('Error al crear cuenta. Intenta de nuevo.'); return; }
+    finishLogin();
+  } else {
+    // Verify PIN
+    const { data } = await sb.from('users').select('pin').eq('username',currentUser).maybeSingle();
+    if (!data || data.pin !== pinBuffer) {
+      showPinError('PIN incorrecto');
+    } else {
+      finishLogin();
+    }
+  }
+}
+
+function showPinError(msg) {
+  for (let i=0;i<4;i++) { const d=document.getElementById('pd'+i); d.classList.remove('filled'); d.classList.add('error'); }
+  document.getElementById('pin-error').textContent=msg;
+  setTimeout(()=>{ pinBuffer=''; updatePinDots(); document.getElementById('pin-error').textContent=''; },800);
+}
+
+function finishLogin() {
+  localStorage.setItem('turkce_user', currentUser);
+  document.getElementById('login-screen').style.display='none';
+  startApp();
+}
+
+function logout(){
+  currentUser=''; userPoints=0; userAchievements=new Set();
+  localStorage.removeItem('turkce_user');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-step1').classList.remove('hidden');
+  document.getElementById('login-step2').classList.add('hidden');
+  document.getElementById('username-input').value='';
+  pinBuffer=''; updatePinDots();
+}
+
+// ═══ APP START ═══
+async function startApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-avatar').textContent=currentUser.charAt(0).toUpperCase();
+  document.getElementById('username-display').textContent=currentUser;
+  const last=localStorage.getItem('turkce_dir_'+currentUser)||'es-tr';
+  sessionDir=last==='tr-es'?'es-tr':'tr-es';
+  localStorage.setItem('turkce_dir_'+currentUser,sessionDir);
+  await loadData();
+}
+
+async function loadData(){
+  const[{data:words},{data:progress},{data:uRec},{data:achiev}]=await Promise.all([
+    sb.from('words').select('*').order('created_at',{ascending:false}),
+    sb.from('progress').select('*').eq('username',currentUser),
+    sb.from('users').select('*').eq('username',currentUser).maybeSingle(),
+    sb.from('achievements').select('achievement_key').eq('username',currentUser)
+  ]);
+  allWords=words||[]; userProgress={};
+  (progress||[]).forEach(p=>{ userProgress[p.word_id]=p; });
+  userRecord=uRec;
+  userPoints=uRec?.points||0;
+  userAchievements=new Set((achiev||[]).map(a=>a.achievement_key));
+  updateLevelBadge();
+  buildStudyQueue(); updateDueBadge(); renderStudy();
+}
+
+// ═══ SM-2 ═══
+function sm2(q,reps,ef,iv){
+  if(q===0)return{repetitions:0,ease_factor:ef,interval_days:1,next_review:dfn(1)};
+  const ni=reps===0?1:reps===1?3:Math.round(iv*ef);
+  const qm=q===1?2:q===2?3:4;
+  const nef=Math.max(1.3,ef+0.1-(5-qm)*(0.08+(5-qm)*0.02));
+  return{repetitions:reps+1,ease_factor:parseFloat(nef.toFixed(4)),interval_days:ni,next_review:dfn(ni)};
+}
+function dfn(d){const dt=new Date();dt.setDate(dt.getDate()+d);return dt.toISOString().split('T')[0];}
+function today(){return new Date().toISOString().split('T')[0];}
+function isDue(id){const p=userProgress[id];return!p||p.next_review<=today();}
+function getMode(id){const r=userProgress[id]?.repetitions||0;return r===0?'mc':r<=4?'written':'mental';}
+
+// ═══ STUDY ═══
+function buildStudyQueue(){
+  if (!intensiveMode) {
+    studyQueue=allWords.filter(w=>isDue(w.id)).sort(()=>Math.random()-.5);
+  }
+  studyIndex=0;
+  sessionStats={reviewed:0,correct:0,points:0,speedCount:0,startTime:Date.now(),errors:0};
+}
+function updateDueBadge(){
+  const n=studyQueue.length;
+  ['due-badge','due-badge-mob'].forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.textContent=n>99?'99+':n; b.style.display=n>0?'inline':'none';
+  });
+}
+
+function speak(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='tr-TR'; u.rate=0.85; u.pitch=1;
+  window.speechSynthesis.speak(u);
+}
+
+function renderStudy(){
+  document.getElementById('study-loading').style.display='none';
+  document.getElementById('study-content').style.display='block';
+  const c=document.getElementById('study-content');
+  if(allWords.length===0){
+    c.innerHTML=`<div class="panel study-card"><div class="study-empty"><div class="empty-icon">🌙</div>
+      <div class="empty-title">Biblioteca vacía</div>
+      <p class="empty-body">Agrega tu primera palabra en Biblioteca<br>y comienza tu viaje con el turco.</p>
+    </div></div>`;return;
+  }
+  if(studyQueue.length===0||studyIndex>=studyQueue.length){
+    const reviewed=sessionStats.reviewed, pts=sessionStats.points;
+    if(reviewed>0) {
+      const perfect=sessionStats.errors===0;
+      if(perfect){ checkAchievements({type:'perfect_session'}); launchConfetti(); }
+      setTimeout(()=>showSessionSummary(),300);
+      return;
+    }
+    c.innerHTML=`<div class="panel study-card"><div class="study-empty"><div class="empty-icon">✦</div>
+      <div class="empty-title">${studyQueue.length===0?'¡Todo al día!':'Sesión completada'}</div>
+      <p class="empty-body">${studyQueue.length===0?'Sin revisiones pendientes.<br>Agrega palabras nuevas o vuelve mañana.'
+        :`Revisaste ${studyIndex} tarjeta${studyIndex!==1?'s':''} hoy.`}</p>
+      ${studyQueue.length===0?'<br><button class="btn-ghost" style="margin-top:18px" onclick="showTab(\'library\')">+ Agregar palabras</button>':''}
+    </div></div>`;
+    if(intensiveMode){intensiveMode=false;}
+    return;
+  }
+  const w=studyQueue[studyIndex],mode=getMode(w.id),total=studyQueue.length;
+  const pct=Math.round(studyIndex/total*100),isTR=sessionDir==='tr-es';
+  const prompt=isTR?w.turkish:w.spanish, answer=isTR?w.spanish:w.turkish;
+  const mL={mc:'Selección múltiple',written:'Escrito',mental:'Mental'}[mode];
+  const ptVal={mc:5,written:15,mental:25}[mode];
+  cardRevealTime=Date.now();
+  let qHTML='';
+  const ttsBtn=isTR?`<button class="btn-tts" onclick="speak('${ea(w.turkish)}')" title="Pronunciar">🔊</button>`:'';
+
+  if(mode==='mc'){
+    const opts=buildMCOpts(w,answer,isTR);
+    qHTML=`<div class="mc-opts">${opts.map(o=>`<button class="mc-opt" onclick="handleMC(this,'${ea(o)}','${ea(answer)}','${w.id}')">${eh(o)}</button>`).join('')}</div>`;
+  } else if(mode==='written'){
+    qHTML=`<div class="written-wrap">
+      <input type="text" class="written-input" id="wans" placeholder="Escribe tu respuesta..." autocomplete="off">
+      <div class="written-fb" id="wfb"></div><br>
+      <button class="btn-teal" onclick="checkWritten('${ea(answer)}','${w.id}')">Verificar</button>
+    </div>`;
+  } else {
+    // 3D flip card
+    qHTML=`<div class="flip-container">
+      <div class="flip-card-inner" id="flip-card">
+        <div class="flip-face study-card" style="padding:30px 22px;border-radius:0">
+          <button class="btn-reveal" onclick="rvMental()">Revelar respuesta</button>
+        </div>
+        <div class="flip-face flip-face-back" style="padding:0">
+          <div class="answer-reveal" style="margin:0;border-radius:0;padding:24px 22px;background:rgba(13,31,60,0.7)">
+            <div class="answer-word">${eh(answer)}</div>
+            ${w.grammar_note?`<div class="answer-note">📖 ${eh(w.grammar_note)}</div>`:''}
+            ${w.mnemonic?`<div class="answer-note">💡 ${eh(w.mnemonic)}</div>`:''}
+          </div>
+          <div class="rating-wrap" style="padding:16px 0 8px">
+            <button class="btn-rate r0" onclick="rate(0,'${w.id}')">✕<span class="rl">No supe</span></button>
+            <button class="btn-rate r1" onclick="rate(1,'${w.id}')">~<span class="rl">Difícil</span></button>
+            <button class="btn-rate r2" onclick="rate(2,'${w.id}')">✓<span class="rl">Bien</span></button>
+            <button class="btn-rate r3" onclick="rate(3,'${w.id}')">★<span class="rl">Fácil</span></button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  c.innerHTML=`
+    <div class="study-header">
+      <div class="study-counter">${studyIndex+1} / ${total}</div>
+      <div class="study-chips">
+        <span class="chip chip-mode">${mL}</span>
+        <span class="chip chip-dir">${isTR?'TR→ES':'ES→TR'}</span>
+        <span class="chip chip-pts">+${ptVal} pts</span>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="panel study-card" style="${mode==='mental'?'padding:0;overflow:visible;':''}">
+      ${mode!=='mental'?`
+        <div class="card-lang">${isTR?'Turco':'Español'}</div>
+        ${w.category?`<div class="card-cat">${w.category}</div>`:''}
+        <div class="card-word">${eh(prompt)} ${ttsBtn}</div>
+        ${w.example?`<div class="card-divider">✦</div><div class="card-example">${eh(w.example)}</div>`:''}
+        ${qHTML}
+      `:`
+        <div style="padding:28px 24px 10px;text-align:center">
+          <div class="card-lang">${isTR?'Turco':'Español'}</div>
+          ${w.category?`<div class="card-cat">${w.category}</div>`:''}
+          <div class="card-word">${eh(prompt)} ${ttsBtn}</div>
+          ${w.example?`<div class="card-divider">✦</div><div class="card-example">${eh(w.example)}</div>`:''}
+        </div>
+        ${qHTML}
+      `}
+    </div>`;
+  if(mode==='written')setTimeout(()=>{
+    const inp=document.getElementById('wans');
+    if(inp){inp.focus();inp.addEventListener('keydown',e=>{if(e.key==='Enter')checkWritten(answer,w.id);});}
+  },80);
+}
+
+function buildMCOpts(w,correct,isTR){
+  const pool=allWords.filter(x=>x.id!==w.id).sort(()=>Math.random()-.5).slice(0,3);
+  return[...pool.map(x=>isTR?x.spanish:x.turkish),correct].sort(()=>Math.random()-.5);
+}
+function handleMC(btn,chosen,correct,wid){
+  document.querySelectorAll('.mc-opt').forEach(b=>b.disabled=true);
+  const ok=norm(chosen)===norm(correct);
+  btn.classList.add(ok?'ok':'no');
+  if(!ok) document.querySelectorAll('.mc-opt').forEach(b=>{if(norm(b.textContent.trim())===norm(correct))b.classList.add('ok');});
+  setTimeout(()=>applyProgress(wid,ok?2:0),900);
+}
+function checkWritten(correct,wid){
+  const inp=document.getElementById('wans'),fb=document.getElementById('wfb');
+  const val=inp.value.trim(); if(!val)return;
+  const ok=fuzzy(val,correct);
+  inp.classList.add(ok?'ok':'no'); inp.disabled=true;
+  if(ok){fb.className='written-fb ok';fb.textContent='✓ Correcto';}
+  else{fb.className='written-fb no';fb.innerHTML=`✕ Era: <strong>${eh(correct)}</strong>`;}
+  setTimeout(()=>applyProgress(wid,ok?2:0),1200);
+}
+function rvMental(){
+  const fc=document.getElementById('flip-card');
+  if(fc) fc.classList.add('flipped');
+}
+function rate(q,wid){applyProgress(wid,q);}
+
+async function applyProgress(wid,quality){
+  const elapsed=Math.round((Date.now()-cardRevealTime)/1000);
+  const isCorrect=quality>=2;
+  const ex=userProgress[wid];
+  const mode=getMode(wid);
+  const basePts={mc:5,written:15,mental:25}[mode];
+  const speedBonus=(isCorrect&&elapsed<4)?5:0;
+  const pts=isCorrect?basePts+speedBonus:0;
+  // Update session stats
+  sessionStats.reviewed++;
+  if(isCorrect){sessionStats.correct++;sessionStats.points+=pts;}
+  else{sessionStats.errors++;sessionStats.speedCount=0;}
+  if(speedBonus>0) sessionStats.speedCount++; else if(!isCorrect) sessionStats.speedCount=0;
+  // SM-2
+  const res=sm2(quality,ex?.repetitions||0,ex?.ease_factor||2.5,ex?.interval_days||1);
+  const newCorr=(ex?.correct_count||0)+(isCorrect?1:0);
+  const newAtt=(ex?.attempt_count||0)+1;
+  const data={username:currentUser,word_id:wid,...res,last_reviewed:new Date().toISOString(),correct_count:newCorr,attempt_count:newAtt};
+  if(ex) await sb.from('progress').update(data).eq('username',currentUser).eq('word_id',wid);
+  else await sb.from('progress').insert(data);
+  userProgress[wid]={...ex,...data};
+  // Points
+  if(pts>0){ await addPoints(pts); showPtsPopup(pts,speedBonus>0); }
+  // Achievements
+  await checkAchievements({type:'answer',isCorrect,speedCount:sessionStats.speedCount});
+  updateStreak();
+  studyIndex++;
+  updateDueBadge();
+  renderStudy();
+}
+
+function showPtsPopup(pts,speed){
+  const card=document.querySelector('.study-card');
+  if(!card) return;
+  const pop=document.createElement('div');
+  pop.className='pts-popup';
+  pop.textContent=`+${pts}${speed?' ⚡':''}`;
+  card.style.position='relative';
+  card.appendChild(pop);
+  setTimeout(()=>pop.remove(),1400);
+}
+
+// ═══ POINTS & LEVELS ═══
+async function addPoints(pts){
+  const old=userPoints;
+  userPoints+=pts;
+  await sb.from('users').update({points:userPoints}).eq('username',currentUser);
+  updateLevelBadge();
+  checkLevelUp(old,userPoints);
+}
+
+function updateLevelBadge(){
+  const lv=getLevel(userPoints);
+  const b=document.getElementById('level-badge');
+  if(!b)return;
+  b.style.setProperty('--level-color',lv.color);
+  b.style.background=lv.bg;
+  b.style.border=`1px solid ${lv.border}`;
+  b.style.color=lv.color;
+  document.getElementById('level-icon').textContent=lv.icon;
+  document.getElementById('level-name').textContent=lv.name;
+  document.getElementById('level-pts').textContent=`${userPoints} pts`;
+}
+
+function checkLevelUp(oldPts,newPts){
+  const ov=getLevel(oldPts),nv=getLevel(newPts);
+  if(nv.index>ov.index){ showLevelUp(nv); }
+}
+
+function showLevelUp(lv){
+  launchConfetti();
+  const ov=document.getElementById('levelup-overlay');
+  const card=document.getElementById('levelup-card');
+  document.getElementById('levelup-name').textContent=lv.icon+' '+lv.name;
+  document.getElementById('levelup-name').style.color=lv.color;
+  document.getElementById('levelup-pts').textContent=`${userPoints} puntos en total`;
+  card.style.background=lv.bg;
+  card.style.border=`1px solid ${lv.border}`;
+  ov.classList.add('show');
+  const achKey='nivel_'+lv.name.toLowerCase().replace('é','e').replace('í','i').replace('ú','u');
+  checkAchievements({type:'level', key: achKey});
+}
+function closeLevelUp(){ document.getElementById('levelup-overlay').classList.remove('show'); }
+
+// ═══ SESSION SUMMARY ═══
+function showSessionSummary(){
+  const {reviewed,correct,points,errors}=sessionStats;
+  const perfect=errors===0&&reviewed>0;
+  document.getElementById('sum-title').textContent=perfect?'¡Sesión perfecta! ⭐':'Sesión completada';
+  document.getElementById('sum-sub').textContent=perfect?'Sin ningún error. ¡Extraordinario!':'Buen trabajo. Sigue practicando.';
+  document.getElementById('sum-reviewed').textContent=reviewed;
+  document.getElementById('sum-correct').textContent=correct;
+  document.getElementById('sum-pts').textContent='+'+points;
+  document.getElementById('summary-overlay').classList.add('show');
+}
+function closeSummary(){
+  document.getElementById('summary-overlay').classList.remove('show');
+  sessionStats={reviewed:0,correct:0,points:0,speedCount:0,startTime:Date.now(),errors:0};
+  buildStudyQueue(); updateDueBadge(); renderStudy();
+}
+
+// ═══ ACHIEVEMENTS ═══
+async function checkAchievements({type,isCorrect,speedCount,key}={}){
+  const toUnlock=[];
+  if(type==='answer'){
+    if(isCorrect&&!userAchievements.has('primera_palabra')) toUnlock.push('primera_palabra');
+    const mastered=allWords.filter(w=>(userProgress[w.id]?.repetitions||0)>8).length;
+    if(mastered>=10&&!userAchievements.has('dominar_10')) toUnlock.push('dominar_10');
+    if(mastered>=50&&!userAchievements.has('dominar_50')) toUnlock.push('dominar_50');
+    if(allWords.length>=50&&!userAchievements.has('coleccionista')) toUnlock.push('coleccionista');
+    if(speedCount>=5&&!userAchievements.has('velocidad')) toUnlock.push('velocidad');
+    const streak=getStreak();
+    if(streak>=3&&!userAchievements.has('racha_3')) toUnlock.push('racha_3');
+    if(streak>=7&&!userAchievements.has('racha_7')) toUnlock.push('racha_7');
+  }
+  if(type==='perfect_session'&&!userAchievements.has('sesion_perfecta')) toUnlock.push('sesion_perfecta');
+  if(type==='duel_win'&&!userAchievements.has('primer_duelo')) toUnlock.push('primer_duelo');
+  if(type==='level'&&key&&!userAchievements.has(key)) toUnlock.push(key);
+  for(const k of toUnlock){
+    if(userAchievements.has(k))continue;
+    userAchievements.add(k);
+    try{ await sb.from('achievements').insert({username:currentUser,achievement_key:k}); }catch(e){}
+    unlockAchievementUI(k);
+    await new Promise(r=>setTimeout(r,500));
+  }
+}
+
+function unlockAchievementUI(key){
+  const def=ACHIEV_DEF[key]; if(!def)return;
+  const n=document.getElementById('ach-notify');
+  document.getElementById('ach-notify-icon').textContent=def.icon;
+  document.getElementById('ach-notify-name').textContent=def.name;
+  document.getElementById('ach-notify-desc').textContent=def.desc;
+  n.classList.add('show');
+  setTimeout(()=>n.classList.remove('show'),3500);
+}
+
+// ═══ CONFETTI ═══
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const pieces=[];
+  const colors=['#C9923A','#E5B870','#2A9E9E','#7CB87C','#C04060','#B9F2FF','#FFD700'];
+  for(let i=0;i<90;i++) pieces.push({
+    x:Math.random()*canvas.width, y:-20,
+    vx:(Math.random()-0.5)*4, vy:Math.random()*4+3,
+    rot:Math.random()*360, rotV:(Math.random()-0.5)*8,
+    w:Math.random()*10+5, h:Math.random()*6+3,
+    color:colors[Math.floor(Math.random()*colors.length)], life:1
+  });
+  let frame;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    pieces.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV; p.life-=0.008;
+      if(p.y<canvas.height&&p.life>0){alive=true;}
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+    });
+    if(alive) frame=requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  if(frame) cancelAnimationFrame(frame);
+  draw();
+}
+
+// ═══ ERROR HISTORY ═══
+function renderErrors(){
+  const c=document.getElementById('error-list-content');
+  const tracked=allWords.filter(w=>{
+    const p=userProgress[w.id];
+    return p&&(p.attempt_count||0)>0;
+  });
+  if(!tracked.length){
+    c.innerHTML=`<div class="panel" style="padding:40px 24px;text-align:center"><div class="empty-icon">✨</div><p style="color:var(--text-muted)">Sin datos aún. Estudia algunas tarjetas primero.</p></div>`;
+    return;
+  }
+  const sorted=[...tracked].map(w=>{
+    const p=userProgress[w.id];
+    const att=p.attempt_count||0,cor=p.correct_count||0;
+    const errRate=att>0?(att-cor)/att:0;
+    return{...w,errRate,att,cor};
+  }).sort((a,b)=>b.errRate-a.errRate);
+  c.innerHTML=`<div class="error-list">${sorted.map(w=>{
+    const pct=Math.round(w.errRate*100);
+    const col=pct>60?'#E87070':pct>30?'#E5B870':'#7CB87C';
+    return`<div class="err-item">
+      <div class="err-words">
+        <div class="err-tr">${eh(w.turkish)}</div>
+        <div class="err-es">${eh(w.spanish)} · ${w.att} intento${w.att!==1?'s':''}</div>
+      </div>
+      <div class="err-right">
+        <div class="err-rate" style="color:${col}">${pct}% error</div>
+        <div class="err-bar-wrap"><div class="err-bar" style="width:${pct}%;background:${col}"></div></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function startIntensiveMode(){
+  const tracked=allWords.filter(w=>{
+    const p=userProgress[w.id];
+    return p&&(p.attempt_count||0)>0;
+  });
+  if(!tracked.length){showToast('Sin datos de errores aún');return;}
+  const sorted=[...tracked].map(w=>{
+    const p=userProgress[w.id];
+    const att=p.attempt_count||0,cor=p.correct_count||0;
+    return{...w,errRate:att>0?(att-cor)/att:0};
+  }).sort((a,b)=>b.errRate-a.errRate).slice(0,20);
+  intensiveMode=true;
+  studyQueue=sorted.sort(()=>Math.random()-0.5);
+  studyIndex=0;
+  sessionStats={reviewed:0,correct:0,points:0,speedCount:0,startTime:Date.now(),errors:0};
+  showTab('study');
+  showToast('⚡ Modo Intensivo activado');
+  renderStudy();
+}
+
+// ═══ DUELS ═══
+async function renderDuels(){
+  const c=document.getElementById('duel-content');
+  c.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const {data:myDuels}=await sb.from('duels').select('*').or(`challenger.eq.${currentUser},opponent.eq.${currentUser}`).order('created_at',{ascending:false}).limit(30);
+  const duels=myDuels||[];
+  const pending=duels.filter(d=>d.status==='pending'&&d.opponent===currentUser);
+  const waiting=duels.filter(d=>d.status==='pending'&&d.challenger===currentUser);
+  const completed=duels.filter(d=>d.status==='completed');
+  let html='';
+  if(pending.length){
+    html+=`<div class="duel-sec">Desafíos recibidos (${pending.length})</div>`;
+    html+=`<div class="duel-list">${await Promise.all(pending.map(async d=>{
+      const w=allWords.find(x=>x.id===d.word_id)||{turkish:'?',spanish:'?'};
+      return`<div class="err-item" style="flex-direction:column;align-items:flex-start">
+        <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+          <div><div class="duel-word">${eh(w.turkish)}</div><div class="duel-meta">De <strong style="color:var(--gold-light)">${eh(d.challenger)}</strong></div></div>
+          <span class="duel-badge db-pending">Pendiente</span>
+        </div>
+        <div class="duel-ans-area">
+          <input type="text" class="duel-ans-input" id="dans-${d.id}" placeholder="Escribe la traducción al español...">
+          <button class="btn-teal" style="padding:9px 14px;font-size:13px" onclick="respondToDuel('${d.id}','${w.id}','${ea(w.spanish)}')">Responder</button>
+        </div>
+      </div>`;
+    })).then(a=>a.join(''))}</div>`;
+  }
+  if(waiting.length){
+    html+=`<div class="duel-sec">Esperando respuesta</div>`;
+    html+=`<div class="duel-list">${waiting.map(d=>{
+      const w=allWords.find(x=>x.id===d.word_id)||{turkish:'?',spanish:'?'};
+      return`<div class="err-item"><div class="err-words">
+        <div class="duel-word">${eh(w.turkish)}</div>
+        <div class="duel-meta">Desafié a <strong style="color:var(--gold-light)">${eh(d.opponent)}</strong></div>
+      </div><span class="duel-badge db-pending">Esperando</span></div>`;
+    }).join('')}</div>`;
+  }
+  if(completed.length){
+    html+=`<div class="duel-sec">Historial</div>`;
+    html+=`<div class="duel-list">${completed.map(d=>{
+      const w=allWords.find(x=>x.id===d.word_id)||{turkish:'?',spanish:'?'};
+      const amChallenger=d.challenger===currentUser;
+      const myCorrect=amChallenger?d.challenger_correct:d.opponent_correct;
+      const opCorrect=amChallenger?d.opponent_correct:d.challenger_correct;
+      const myTime=amChallenger?d.challenger_time:d.opponent_time;
+      const opTime=amChallenger?d.opponent_time:d.challenger_time;
+      const rival=amChallenger?d.opponent:d.challenger;
+      let result='tie', badge='db-tie', label='Empate';
+      if(myCorrect&&!opCorrect){result='win';badge='db-win';label='Victoria 🏆';}
+      else if(!myCorrect&&opCorrect){result='lose';badge='db-lose';label='Derrota';}
+      else if(myCorrect&&opCorrect){if((myTime||9999)<(opTime||9999)){result='win';badge='db-win';label='Victoria (más rápido) ⚡';}else{result='lose';badge='db-lose';label='Derrota (más lento)';}}
+      else if(!myCorrect&&!opCorrect){badge='db-tie';label='Empate (ambos fallaron)';}
+      return`<div class="err-item"><div class="err-words">
+        <div class="duel-word">${eh(w.turkish)}</div>
+        <div class="duel-meta">vs <strong style="color:var(--gold-light)">${eh(rival)}</strong></div>
+      </div><span class="duel-badge ${badge}">${label}</span></div>`;
+    }).join('')}</div>`;
+  }
+  if(!pending.length&&!waiting.length&&!completed.length){
+    html=`<div class="panel duel-empty"><div class="empty-icon">⚔️</div><p>Sin duelos aún. ¡Desafía a alguien arriba!</p></div>`;
+  }
+  c.innerHTML=html;
+}
+
+async function startDuelChallenge(){
+  const op=document.getElementById('duel-opponent').value.trim().toLowerCase();
+  if(!op){showToast('Escribe el nombre del oponente');return;}
+  if(op===currentUser){showToast('No puedes desafiarte a ti mismo');return;}
+  if(allWords.length===0){showToast('Sin palabras en la biblioteca');return;}
+  // Check opponent exists
+  const{data:opUser}=await sb.from('users').select('username').eq('username',op).maybeSingle();
+  if(!opUser){showToast(`Usuario "${op}" no encontrado`);return;}
+  const word=allWords[Math.floor(Math.random()*allWords.length)];
+  // Show challenge UI in duel content
+  const c=document.getElementById('duel-content');
+  c.innerHTML=`<div class="panel study-card" style="text-align:center">
+    <div class="card-lang">Turco</div>
+    ${word.category?`<div class="card-cat">${word.category}</div>`:''}
+    <div class="card-word">${eh(word.turkish)} <button class="btn-tts" onclick="speak('${ea(word.turkish)}')">🔊</button></div>
+    ${word.example?`<div class="card-divider">✦</div><div class="card-example">${eh(word.example)}</div>`:''}
+    <div class="written-wrap">
+      <input type="text" class="written-input" id="dchallans" placeholder="Tu respuesta en español..." autocomplete="off">
+      <div class="written-fb" id="dchfb"></div><br>
+      <button class="btn-teal" onclick="submitDuelChallenge('${word.id}','${ea(word.spanish)}','${op}')">Enviar desafío</button>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    const inp=document.getElementById('dchallans');
+    if(inp){cardRevealTime=Date.now();inp.focus();inp.addEventListener('keydown',e=>{if(e.key==='Enter')submitDuelChallenge(word.id,word.spanish,op);});}
+  },80);
+}
+
+async function submitDuelChallenge(wordId,correct,opponent){
+  const inp=document.getElementById('dchallans'),fb=document.getElementById('dchfb');
+  const val=inp.value.trim(); if(!val)return;
+  const ok=fuzzy(val,correct);
+  const elapsed=Math.round(Date.now()-cardRevealTime);
+  inp.disabled=true;
+  if(ok){fb.className='written-fb ok';fb.textContent='✓ Correcto';}
+  else{fb.className='written-fb no';fb.innerHTML=`✕ Era: <strong>${eh(correct)}</strong>`;}
+  await sb.from('duels').insert({word_id:wordId,challenger:currentUser,opponent,challenger_correct:ok,challenger_time:elapsed,status:'pending'});
+  document.getElementById('duel-opponent').value='';
+  showToast(`Duelo enviado a ${opponent} ✓`);
+  setTimeout(()=>renderDuels(),1500);
+}
+
+async function respondToDuel(duelId,wordId,correct){
+  const inp=document.getElementById(`dans-${duelId}`);
+  const val=inp?.value.trim(); if(!val){showToast('Escribe tu respuesta');return;}
+  const ok=fuzzy(val,correct);
+  const elapsed=Math.round(Date.now()-cardRevealTime);
+  const{data:duel}=await sb.from('duels').select('*').eq('id',duelId).maybeSingle();
+  await sb.from('duels').update({opponent_correct:ok,opponent_time:elapsed,status:'completed'}).eq('id',duelId);
+  // Check win
+  const myWon=ok&&!duel.challenger_correct||(ok&&duel.challenger_correct&&elapsed<duel.challenger_time);
+  if(myWon) await checkAchievements({type:'duel_win'});
+  showToast(ok?'¡Respuesta correcta! ✓':'Respuesta incorrecta');
+  setTimeout(()=>renderDuels(),800);
+}
+
+// ═══ LIBRARY ═══
+function toggleAddForm(){
+  const p=document.getElementById('add-word-panel');
+  if(p.classList.contains('open')){cancelForm();}
+  else{document.getElementById('form-title').textContent='Nueva palabra';document.getElementById('edit-word-id').value='';clearForm();p.classList.add('open');setTimeout(()=>document.getElementById('f-turkish').focus(),50);}
+}
+function cancelForm(){document.getElementById('add-word-panel').classList.remove('open');clearForm();}
+function clearForm(){
+  ['f-turkish','f-spanish','f-grammar','f-example','f-mnemonic'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const c=document.getElementById('f-category');if(c)c.value='';
+}
+async function saveWord(){
+  const tr=document.getElementById('f-turkish').value.trim(),es=document.getElementById('f-spanish').value.trim();
+  if(!tr||!es){showToast('Turco y Español son obligatorios');return;}
+  const eid=document.getElementById('edit-word-id').value;
+  const data={turkish:tr,spanish:es,category:document.getElementById('f-category').value||null,example:document.getElementById('f-example').value.trim()||null,grammar_note:document.getElementById('f-grammar').value.trim()||null,mnemonic:document.getElementById('f-mnemonic').value.trim()||null,created_by:currentUser};
+  if(eid){
+    await sb.from('words').update(data).eq('id',eid);
+    const i=allWords.findIndex(w=>w.id===eid);if(i!==-1)allWords[i]={...allWords[i],...data};
+    showToast('Palabra actualizada ✓');
+  }else{
+    const{data:ins}=await sb.from('words').insert(data).select().single();
+    if(ins)allWords.unshift(ins);
+    showToast('Palabra agregada ✓');
+  }
+  cancelForm(); renderLibrary(); buildStudyQueue(); updateDueBadge();
+  checkAchievements({type:'answer',isCorrect:false,speedCount:0});
+}
+function editWord(id){
+  const w=allWords.find(x=>x.id===id);if(!w)return;
+  document.getElementById('form-title').textContent='Editar palabra';
+  document.getElementById('edit-word-id').value=w.id;
+  document.getElementById('f-turkish').value=w.turkish;
+  document.getElementById('f-spanish').value=w.spanish;
+  document.getElementById('f-category').value=w.category||'';
+  document.getElementById('f-example').value=w.example||'';
+  document.getElementById('f-grammar').value=w.grammar_note||'';
+  document.getElementById('f-mnemonic').value=w.mnemonic||'';
+  document.getElementById('add-word-panel').classList.add('open');
+  document.getElementById('add-word-panel').scrollIntoView({behavior:'smooth'});
+}
+async function deleteWord(id){
+  if(!confirm('¿Eliminar? Se borrará el progreso de todos los usuarios.'))return;
+  await sb.from('progress').delete().eq('word_id',id);
+  await sb.from('words').delete().eq('id',id);
+  allWords=allWords.filter(w=>w.id!==id); delete userProgress[id];
+  renderLibrary(); buildStudyQueue(); updateDueBadge(); showToast('Eliminada');
+}
+function renderLibrary(){
+  const search=(document.getElementById('lib-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('lib-cat')?.value||'';
+  const filtered=allWords.filter(w=>(!search||w.turkish.toLowerCase().includes(search)||w.spanish.toLowerCase().includes(search))&&(!cat||w.category===cat));
+  const list=document.getElementById('word-list');
+  if(!filtered.length){list.innerHTML=`<div class="word-empty">${allWords.length===0?'¡Agrega tu primera palabra arriba!':'Sin resultados.'}</div>`;return;}
+  list.innerHTML=filtered.map(w=>{
+    const r=userProgress[w.id]?.repetitions||0;
+    const dc=r===0?'dn':r<=4?'dl':r<=8?'dr':'dm';
+    const dt=r===0?'Nueva':r<=4?'Aprendiendo':r<=8?'Revisando':'Dominada';
+    return`<div class="word-item">
+      <div class="w-dot ${dc}" title="${dt}"></div>
+      <div class="word-main"><div class="word-tr">${eh(w.turkish)}</div><div class="word-es">${eh(w.spanish)}${w.grammar_note?' · '+eh(w.grammar_note):''}</div></div>
+      <div class="word-meta">
+        ${w.category?`<span class="cat-pill">${w.category}</span>`:''}
+        <button class="btn-icon" onclick="editWord('${w.id}')" title="Editar">✏️</button>
+        <button class="btn-icon del" onclick="deleteWord('${w.id}')" title="Eliminar">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ IMPORT / EXPORT ═══
+function exportDeck(){dlJSON(allWords.map(w=>({turkish:w.turkish,spanish:w.spanish,category:w.category,example:w.example,grammar_note:w.grammar_note,mnemonic:w.mnemonic})),'turkce-mazo.json');showToast('Mazo exportado ✓');}
+function openImport(){document.getElementById('import-modal').style.display='flex';}
+function closeImport(){document.getElementById('import-modal').style.display='none';document.getElementById('import-json').value='';}
+async function importDeck(){
+  let deck;try{deck=JSON.parse(document.getElementById('import-json').value.trim());}catch{showToast('JSON inválido');return;}
+  if(!Array.isArray(deck)){showToast('Debe ser un arreglo');return;}
+  const ex=new Set(allWords.map(w=>w.turkish.toLowerCase()));
+  const toAdd=deck.filter(w=>w.turkish&&w.spanish&&!ex.has(w.turkish.toLowerCase())).map(w=>({turkish:w.turkish,spanish:w.spanish,category:w.category||null,example:w.example||null,grammar_note:w.grammar_note||null,mnemonic:w.mnemonic||null,created_by:currentUser}));
+  if(!toAdd.length){showToast('No hay palabras nuevas');return;}
+  const{data}=await sb.from('words').insert(toAdd).select();
+  if(data)allWords=[...data,...allWords];
+  closeImport(); renderLibrary(); buildStudyQueue(); updateDueBadge();
+  showToast(`${toAdd.length} palabras importadas ✓`);
+}
+function dlJSON(d,n){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=n;a.click();}
+
+// ═══ DASHBOARD ═══
+async function renderDashboard(){
+  const total=allWords.length;
+  let nw=0,le=0,rv=0,ms=0;
+  allWords.forEach(w=>{const r=userProgress[w.id]?.repetitions||0;if(r===0)nw++;else if(r<=4)le++;else if(r<=8)rv++;else ms++;});
+  const due=studyQueue.length,streak=getStreak(),lv=getLevel(userPoints);
+  // Leaderboard
+  const{data:users}=await sb.from('users').select('username,points').order('points',{ascending:false}).limit(20);
+  const lb=users||[];
+  const segs=total>0?[
+    {pct:nw/total*100,color:'rgba(138,155,181,0.4)',label:'Nuevas',count:nw},
+    {pct:le/total*100,color:'var(--gold)',label:'Aprendiendo',count:le},
+    {pct:rv/total*100,color:'var(--turq-light)',label:'Revisando',count:rv},
+    {pct:ms/total*100,color:'#7CB87C',label:'Dominadas',count:ms}
+  ]:[];
+  // Achievements
+  const achKeys=Object.keys(ACHIEV_DEF);
+  const achGrid=achKeys.map(k=>{
+    const def=ACHIEV_DEF[k],ul=userAchievements.has(k);
+    return`<div class="ach-item ${ul?'unlocked':''}"><div class="ach-icon">${def.icon}</div><div class="ach-name">${def.name}</div></div>`;
+  }).join('');
+  document.getElementById('dashboard-content').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card sg"><div class="stat-number">${total}</div><div class="stat-label">Palabras</div></div>
+      <div class="stat-card sc"><div class="stat-number">${due}</div><div class="stat-label">Pendientes</div></div>
+      <div class="stat-card sv"><div class="stat-number">${ms}</div><div class="stat-label">Dominadas</div></div>
+      <div class="stat-card st"><div class="stat-number">${streak}</div><div class="stat-label">Días racha</div></div>
+    </div>
+    <div class="dash-sec">Nivel actual</div>
+    <div class="panel" style="padding:18px 22px;display:flex;align-items:center;gap:16px;border-color:${lv.border};background:${lv.bg}">
+      <span style="font-size:2.2rem">${lv.icon}</span>
+      <div>
+        <div style="font-family:'Amiri',serif;font-size:1.6rem;font-weight:700;color:${lv.color}">${lv.name}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${userPoints} puntos
+          ${lv.index<LEVELS.length-1?` · ${LEVELS[lv.index+1].min-userPoints} para ${LEVELS[lv.index+1].name}`:'· Nivel máximo ✦'}
+        </div>
+      </div>
+    </div>
+    <div class="dash-sec">Racha de estudio</div>
+    <div class="panel streak-card"><div class="streak-flame">🔥</div><div><div class="streak-num">${streak} ${streak===1?'día':'días'}</div><div class="streak-sub">consecutivos</div></div></div>
+    ${total>0?`<div class="dash-sec">Distribución</div>
+    <div class="panel dist-wrap">
+      <div class="dist-bar">${segs.map(s=>`<div class="dist-seg" style="width:${s.pct.toFixed(1)}%;background:${s.color}"></div>`).join('')}</div>
+      <div class="dist-legend">${segs.map(s=>`<div class="leg-item"><div class="leg-dot" style="background:${s.color}"></div>${s.label}: ${s.count}</div>`).join('')}</div>
+    </div>`:''}
+    <div class="dash-sec">Logros (${userAchievements.size}/${achKeys.length})</div>
+    <div class="ach-grid">${achGrid}</div>
+    <div class="dash-sec">Clasificación global</div>
+    <div class="panel" style="padding:14px">
+      <div class="lb-list">${lb.map((u,i)=>{
+        const ulv=getLevel(u.points||0);
+        return`<div class="lb-item ${u.username===currentUser?'me':''}">
+          <div class="lb-rank ${i<3?'top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+          <div class="lb-name">${eh(u.username)}</div>
+          <span class="lb-level" style="background:${ulv.bg};color:${ulv.color};border:1px solid ${ulv.border}">${ulv.icon} ${ulv.name}</span>
+          <div class="lb-pts">${u.points||0}</div>
+        </div>`;
+      }).join('')}</div>
+    </div>
+    <div style="margin-top:22px;display:flex;justify-content:flex-end">
+      <button class="btn-ghost" onclick="exportBackup()">⬇ Respaldo personal</button>
+    </div>`;
+}
+function exportBackup(){dlJSON({user:currentUser,exported:new Date().toISOString(),words:allWords,progress:Object.values(userProgress)},`turkce-respaldo-${currentUser}.json`);showToast('Respaldo exportado ✓');}
+
+// ═══ STREAK ═══
+function updateStreak(){
+  const k=`ts_${currentUser}`,t=today();
+  let d=JSON.parse(localStorage.getItem(k)||'{"last":"","count":0}');
+  if(d.last===t)return;
+  const y=new Date();y.setDate(y.getDate()-1);
+  d.count=d.last===y.toISOString().split('T')[0]?d.count+1:1;
+  d.last=t;localStorage.setItem(k,JSON.stringify(d));
+}
+function getStreak(){
+  const k=`ts_${currentUser}`;
+  const d=JSON.parse(localStorage.getItem(k)||'{"last":"","count":0}'),t=today();
+  const y=new Date();y.setDate(y.getDate()-1);
+  return(d.last===t||d.last===y.toISOString().split('T')[0])?d.count:0;
+}
+
+// ═══ NAV ═══
+function showTab(tab){
+  ALL_TABS.forEach(t=>{
+    const s=document.getElementById(`section-${t}`);
+    const dt=document.getElementById(`tab-${t}`);
+    const mt=document.getElementById(`mob-${t}`);
+    if(s)s.style.display=t===tab?'block':'none';
+    if(dt)dt.classList.toggle('active',t===tab);
+    if(mt)mt.classList.toggle('active',t===tab);
+  });
+  if(tab==='library')renderLibrary();
+  if(tab==='dashboard')renderDashboard();
+  if(tab==='errors')renderErrors();
+  if(tab==='duel')renderDuels();
+}
+
+// ═══ UTILS ═══
+function norm(s){return s.toLowerCase().trim().replace(/ğ/g,'g').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ç/g,'c');}
+function fuzzy(a,b){const x=norm(a),y=norm(b);return x===y||(y.length>4&&lev(x,y)<=1);}
+function lev(a,b){const m=a.length,n=b.length,dp=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);for(let j=0;j<=n;j++)dp[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
+function eh(s){return s?(''+(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function ea(s){return s?(''+(s)).replace(/\\/g,'\\\\').replace(/'/g,"\\'"):''}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
