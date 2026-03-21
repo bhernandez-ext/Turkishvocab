@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Türkçe Kelimeler</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --lapis: #0D1F3C;
+  --lapis-mid: #162d55;
+  --lapis-light: #1E3A6E;
+  --gold: #C9923A;
+  --gold-light: #E5B870;
+  --gold-pale: #F5E6C8;
+  --turq: #1B7676;
+  --turq-light: #2A9E9E;
+  --ivory: #F7F2E8;
+  --crimson: #7A1E2E;
+  --crimson-light: #C04060;
+  --text-on-dark: #E8DFC8;
+  --text-muted: #8A9BB5;
+  --border-dark: rgba(201,146,58,0.22);
+  --shadow-deep: 0 8px 40px rgba(13,31,60,0.5);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Mulish', sans-serif;
+  background: var(--lapis);
+  color: var(--text-on-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 0 L50 10 L80 10 L80 20 L70 30 L80 40 L70 30 L80 20 L80 10 L50 10 Z' fill='none' stroke='rgba(201,146,58,0.06)' stroke-width='0.7'/%3E%3Ccircle cx='40' cy='40' r='10' fill='none' stroke='rgba(201,146,58,0.05)' stroke-width='0.6'/%3E%3Crect x='33' y='33' width='14' height='14' transform='rotate(45 40 40)' fill='none' stroke='rgba(201,146,58,0.04)' stroke-width='0.6'/%3E%3Cline x1='0' y1='0' x2='80' y2='80' stroke='rgba(201,146,58,0.025)' stroke-width='0.4'/%3E%3Cline x1='80' y1='0' x2='0' y2='80' stroke='rgba(201,146,58,0.025)' stroke-width='0.4'/%3E%3C/svg%3E");
+}
+
+/* LOGIN */
+#login-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 90; padding: 24px;
+}
+.login-card {
+  max-width: 400px; width: 100%;
+  position: relative; z-index: 1; text-align: center;
+}
+.star-svg { width: 56px; height: 56px; margin: 0 auto 14px; display: block; }
+.login-card h1 {
+  font-family: 'Amiri', serif; font-size: 3rem; font-weight: 700;
+  color: var(--gold-light); letter-spacing: 0.04em; line-height: 1;
+  margin-bottom: 4px; text-shadow: 0 2px 20px rgba(201,146,58,0.4);
+}
+.login-tagline {
+  color: var(--text-muted); font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase; font-weight: 600; margin-bottom: 32px;
+}
+.login-frame {
+  background: rgba(22,45,85,0.88);
+  border: 1px solid var(--border-dark); border-radius: 16px;
+  padding: 28px 24px; backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(201,146,58,0.12);
+}
+.login-label {
+  display: block; text-align: left; margin-bottom: 7px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--gold); opacity: 0.85;
+}
+.login-frame input {
+  width: 100%; background: rgba(13,31,60,0.7);
+  border: 1.5px solid var(--border-dark); border-radius: 10px;
+  padding: 13px 16px; font-family: 'Mulish', sans-serif;
+  font-size: 15px; color: var(--ivory); margin-bottom: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.login-frame input::placeholder { color: rgba(138,155,181,0.5); }
+.login-frame input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,58,0.14); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  color: var(--lapis); border: none; border-radius: 10px;
+  padding: 13px 28px; font-family: 'Mulish', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; width: 100%;
+  transition: transform 0.15s, box-shadow 0.15s; letter-spacing: 0.04em;
+  box-shadow: 0 4px 18px rgba(201,146,58,0.35);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,146,58,0.45); }
+.btn-gold:active { transform: none; }
+.login-error { color: var(--crimson-light); font-size: 13px; margin-top: 10px; display: block; }
+
+/* APP */
+#app { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 0 20px 100px; }
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0 0; margin-bottom: 26px;
+}
+.app-logo {
+  font-family: 'Amiri', serif; font-size: 1.55rem; font-weight: 700;
+  color: var(--gold-light); letter-spacing: 0.06em;
+  text-shadow: 0 1px 10px rgba(201,146,58,0.3);
+}
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(22,45,85,0.7);
+  border: 1px solid var(--border-dark); border-radius: 20px;
+  padding: 5px 12px 5px 6px;
+}
+.user-avatar {
+  width: 27px; height: 27px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--turq));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--lapis);
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.btn-logout {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 12px;
+  font-family: 'Mulish', sans-serif; padding: 4px 8px;
+  border-radius: 6px; transition: color 0.2s; margin-left: 4px;
+}
+.btn-logout:hover { color: var(--gold); }
+
+/* NAV */
+.nav-tabs {
+  display: flex; gap: 3px;
+  background: rgba(13,31,60,0.55);
+  border: 1px solid var(--border-dark);
+  border-radius: 13px; padding: 4px; margin-bottom: 26px;
+}
+.nav-tab {
+  flex: 1; padding: 10px 8px; border: none; background: none; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); border-radius: 10px;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.nav-tab.active {
+  background: var(--lapis-light); color: var(--gold-light);
+  box-shadow: 0 2px 10px rgba(13,31,60,0.4), inset 0 1px 0 rgba(201,146,58,0.12);
+}
+.due-badge {
+  background: var(--crimson); color: white; border-radius: 10px;
+  padding: 1px 6px; font-size: 11px; font-weight: 700;
+  min-width: 18px; text-align: center; display: none;
+}
+
+/* SECTIONS */
+.section { animation: fadeUp 0.28s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* PANEL */
+.panel {
+  background: rgba(22,45,85,0.72);
+  border: 1px solid var(--border-dark); border-radius: 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(201,146,58,0.08);
+}
+
+/* STUDY */
+.study-header { text-align: center; margin-bottom: 18px; }
+.study-counter {
+  font-family: 'Amiri', serif; font-size: 1.35rem;
+  color: var(--gold-light); margin-bottom: 6px;
+}
+.study-chips { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.chip {
+  padding: 2px 11px; border-radius: 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+}
+.chip-mode { background: rgba(201,146,58,0.14); border: 1px solid rgba(201,146,58,0.3); color: var(--gold); }
+.chip-dir { background: rgba(27,118,118,0.18); border: 1px solid rgba(27,118,118,0.4); color: var(--turq-light); }
+
+.progress-track {
+  height: 3px; background: rgba(201,146,58,0.12);
+  border-radius: 3px; margin-bottom: 22px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--turq-light));
+  border-radius: 3px; transition: width 0.5s ease;
+}
+
+.study-card { padding: 44px 36px 36px; text-align: center; position: relative; overflow: hidden; }
+.study-card::before, .study-card::after {
+  content: ''; position: absolute; width: 56px; height: 56px; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M28 2 L34 14 L48 8 L42 22 L54 28 L42 34 L48 48 L34 42 L28 54 L22 42 L8 48 L14 34 L2 28 L14 22 L8 8 L22 14 Z' fill='none' stroke='rgba(201,146,58,0.35)' stroke-width='1.2'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.study-card::before { top: -12px; left: -12px; }
+.study-card::after { bottom: -12px; right: -12px; transform: rotate(180deg); }
+
+.card-lang { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); opacity: 0.75; margin-bottom: 12px; }
+.card-cat {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--turq-light); background: rgba(27,118,118,0.18);
+  border: 1px solid rgba(27,118,118,0.3);
+  display: inline-block; padding: 3px 12px; border-radius: 10px; margin-bottom: 10px;
+}
+.card-word {
+  font-family: 'Amiri', serif; font-size: 3.2rem; font-weight: 700;
+  color: var(--ivory); line-height: 1.1; margin-bottom: 8px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+.card-example {
+  font-family: 'Amiri', serif; font-style: italic; font-size: 1.05rem;
+  color: rgba(232,223,200,0.5); margin-top: 10px; line-height: 1.5;
+}
+.card-divider {
+  color: rgba(201,146,58,0.35); margin: 16px 0 0; font-size: 13px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.card-divider::before, .card-divider::after {
+  content: ''; width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,146,58,0.25), transparent);
+}
+
+/* MC */
+.mc-opts {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin: 24px auto 0; max-width: 440px;
+}
+.mc-opt {
+  background: rgba(13,31,60,0.55); border: 1.5px solid var(--border-dark);
+  border-radius: 12px; padding: 14px 12px; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text-on-dark); transition: all 0.15s; text-align: center;
+}
+.mc-opt:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-light); background: rgba(201,146,58,0.1); }
+.mc-opt.ok { border-color: var(--turq-light); color: var(--turq-light); background: rgba(27,118,118,0.14); }
+.mc-opt.no { border-color: var(--crimson-light); color: var(--crimson-light); background: rgba(192,64,96,0.12); }
+
+/* Written */
+.written-wrap { margin: 24px auto 0; max-width: 360px; }
+.written-input {
+  width: 100%; padding: 13px 16px; text-align: center;
+  background: rgba(13,31,60,0.6); border: 1.5px solid var(--border-dark);
+  border-radius: 12px; font-family: 'Mulish', sans-serif;
+  font-size: 1rem; color: var(--ivory); margin-bottom: 11px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.written-input::placeholder { color: rgba(138,155,181,0.4); }
+.written-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,58,0.12); }
+.written-input.ok { border-color: var(--turq-light); background: rgba(27,118,118,0.1); }
+.written-input.no { border-color: var(--crimson-light); background: rgba(192,64,96,0.1); }
+.written-fb { font-size: 13px; margin-top: 4px; font-weight: 600; }
+.written-fb.ok { color: var(--turq-light); } .written-fb.no { color: #E87070; }
+
+/* Reveal */
+.btn-reveal {
+  background: rgba(201,146,58,0.13); border: 1.5px solid var(--gold);
+  color: var(--gold-light); border-radius: 12px; padding: 12px 30px;
+  font-family: 'Mulish', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; margin-top: 24px; letter-spacing: 0.04em;
+}
+.btn-reveal:hover { background: rgba(201,146,58,0.22); }
+.answer-reveal {
+  background: rgba(13,31,60,0.5); border: 1px solid var(--border-dark);
+  border-radius: 14px; padding: 18px 22px; margin: 18px auto 0; max-width: 360px;
+}
+.answer-word {
+  font-family: 'Amiri', serif; font-size: 1.9rem; font-weight: 700;
+  color: var(--gold-light); margin-bottom: 4px;
+}
+.answer-note { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+.rating-wrap { display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+.btn-rate {
+  padding: 9px 14px; border-radius: 10px; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-size: 12.5px; font-weight: 700;
+  transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 68px;
+}
+.rl { font-size: 10px; font-weight: 500; opacity: 0.7; }
+.r0 { border: 1.5px solid #E87070; color: #E87070; background: rgba(232,112,112,0.08); }
+.r0:hover { background: rgba(232,112,112,0.18); }
+.r1 { border: 1.5px solid var(--gold); color: var(--gold); background: rgba(201,146,58,0.08); }
+.r1:hover { background: rgba(201,146,58,0.18); }
+.r2 { border: 1.5px solid #7CB87C; color: #7CB87C; background: rgba(124,184,124,0.08); }
+.r2:hover { background: rgba(124,184,124,0.18); }
+.r3 { border: 1.5px solid var(--turq-light); color: var(--turq-light); background: rgba(42,158,158,0.08); }
+.r3:hover { background: rgba(42,158,158,0.18); }
+
+/* Empty */
+.study-empty { text-align: center; padding: 60px 24px; }
+.empty-icon { font-size: 2.8rem; margin-bottom: 14px; }
+.empty-title { font-family: 'Amiri', serif; font-size: 1.75rem; color: var(--gold-light); margin-bottom: 10px; }
+.empty-body { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+
+/* BTN TEAL */
+.btn-teal {
+  background: rgba(27,118,118,0.25); border: 1.5px solid var(--turq-light);
+  color: var(--turq-light); border-radius: 10px; padding: 11px 22px;
+  font-family: 'Mulish', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-teal:hover { background: rgba(27,118,118,0.4); }
+
+/* LIBRARY */
+.lib-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.lib-top h2 { font-family: 'Amiri', serif; font-size: 1.45rem; color: var(--gold-light); }
+.lib-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-ghost {
+  background: rgba(13,31,60,0.4); border: 1px solid var(--border-dark);
+  color: var(--text-on-dark); border-radius: 8px; padding: 8px 13px;
+  font-family: 'Mulish', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold-light); }
+
+/* Add word panel */
+.add-word-panel {
+  margin-bottom: 18px; max-height: 0; overflow: hidden;
+  transition: max-height 0.38s ease, opacity 0.3s; opacity: 0;
+}
+.add-word-panel.open { max-height: 620px; opacity: 1; }
+.add-word-inner { padding: 22px; }
+.panel-title {
+  font-family: 'Amiri', serif; font-size: 1.15rem; color: var(--gold-light);
+  margin-bottom: 18px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-dark), transparent); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-field label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--gold); opacity: 0.8;
+}
+.form-field input, .form-field select {
+  background: rgba(13,31,60,0.65); border: 1.5px solid var(--border-dark);
+  border-radius: 8px; padding: 10px 12px; font-family: 'Mulish', sans-serif;
+  font-size: 14px; color: var(--ivory); transition: border-color 0.2s;
+}
+.form-field input::placeholder { color: rgba(138,155,181,0.38); }
+.form-field input:focus, .form-field select:focus { outline: none; border-color: var(--gold); }
+.form-field select option { background: var(--lapis-mid); }
+.form-field.full { grid-column: 1 / -1; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-cancel {
+  background: none; border: 1px solid var(--border-dark); color: var(--text-muted);
+  border-radius: 8px; padding: 9px 18px; font-family: 'Mulish', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { border-color: var(--text-muted); color: var(--text-on-dark); }
+
+/* Filters */
+.lib-filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.search-input {
+  flex: 1; min-width: 180px; background: rgba(13,31,60,0.5);
+  border: 1px solid var(--border-dark); border-radius: 8px;
+  padding: 9px 13px; font-family: 'Mulish', sans-serif;
+  font-size: 14px; color: var(--ivory);
+}
+.search-input::placeholder { color: rgba(138,155,181,0.4); }
+.search-input:focus { outline: none; border-color: var(--gold); }
+.filter-sel {
+  background: rgba(13,31,60,0.5); border: 1px solid var(--border-dark);
+  border-radius: 8px; padding: 9px 12px; font-family: 'Mulish', sans-serif;
+  font-size: 13px; color: var(--text-on-dark); cursor: pointer;
+}
+.filter-sel option { background: var(--lapis-mid); }
+
+/* Word list */
+.word-list { display: flex; flex-direction: column; gap: 6px; }
+.word-item {
+  background: rgba(13,31,60,0.35); border: 1px solid var(--border-dark);
+  border-radius: 12px; padding: 13px 16px;
+  display: flex; align-items: center; gap: 13px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.word-item:hover { background: rgba(13,31,60,0.55); border-color: rgba(201,146,58,0.35); }
+.w-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dn { background: rgba(138,155,181,0.4); border: 1px solid rgba(138,155,181,0.3); }
+.dl { background: var(--gold); }
+.dr { background: var(--turq-light); }
+.dm { background: #7CB87C; }
+.word-main { flex: 1; }
+.word-tr { font-family: 'Amiri', serif; font-size: 1.12rem; font-weight: 700; color: var(--ivory); }
+.word-es { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
+.word-meta { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.cat-pill {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 8px;
+  background: rgba(27,118,118,0.18); color: var(--turq-light); border: 1px solid rgba(27,118,118,0.28);
+}
+.btn-icon {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); padding: 4px; border-radius: 6px;
+  font-size: 14px; line-height: 1; transition: color 0.15s, background 0.15s;
+}
+.btn-icon:hover { color: var(--gold-light); background: rgba(201,146,58,0.1); }
+.btn-icon.del:hover { color: #E87070; background: rgba(232,112,112,0.1); }
+.word-empty { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.8; }
+
+/* DASHBOARD */
+.dash-title { font-family: 'Amiri', serif; font-size: 1.45rem; color: var(--gold-light); margin-bottom: 22px; }
+.stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 11px; margin-bottom: 22px; }
+@media (min-width:500px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
+.stat-card { border-radius: 14px; padding: 20px 16px; text-align: center; }
+.sg { background: rgba(201,146,58,0.1); border: 1px solid rgba(201,146,58,0.22); }
+.st { background: rgba(27,118,118,0.1); border: 1px solid rgba(27,118,118,0.22); }
+.sv { background: rgba(124,184,124,0.08); border: 1px solid rgba(124,184,124,0.18); }
+.sc { background: rgba(122,30,46,0.12); border: 1px solid rgba(122,30,46,0.22); }
+.stat-number { font-family: 'Amiri', serif; font-size: 2.4rem; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.sg .stat-number { color: var(--gold-light); }
+.st .stat-number { color: var(--turq-light); }
+.sv .stat-number { color: #7CB87C; }
+.sc .stat-number { color: var(--crimson-light); }
+.stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.dash-sec {
+  margin: 22px 0 13px;
+  font-family: 'Amiri', serif; font-size: 1.1rem; color: var(--gold);
+  display: flex; align-items: center; gap: 12px;
+}
+.dash-sec::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-dark), transparent); }
+.streak-card { padding: 18px 22px; display: flex; align-items: center; gap: 16px; }
+.streak-flame { font-size: 2.2rem; }
+.streak-num { font-family: 'Amiri', serif; font-size: 2.1rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+.streak-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.dist-wrap { padding: 18px 22px; }
+.dist-bar { height: 15px; border-radius: 8px; overflow: hidden; display: flex; margin-bottom: 11px; background: rgba(13,31,60,0.5); }
+.dist-seg { height: 100%; transition: width 0.6s ease; }
+.dist-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(13,31,60,0.82);
+  backdrop-filter: blur(5px); z-index: 200;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal { max-width: 450px; width: 100%; border-radius: 16px; padding: 30px; box-shadow: var(--shadow-deep); }
+.modal h3 { font-family: 'Amiri', serif; font-size: 1.35rem; color: var(--gold-light); margin-bottom: 8px; }
+.modal p { font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+.modal textarea {
+  width: 100%; height: 110px; resize: none;
+  background: rgba(13,31,60,0.65); border: 1.5px solid var(--border-dark);
+  border-radius: 8px; padding: 10px 12px; font-family: monospace;
+  font-size: 12px; color: var(--ivory); margin-bottom: 12px;
+}
+.modal textarea:focus { outline: none; border-color: var(--gold); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* LOADING / TOAST */
+.loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+.spinner {
+  width: 30px; height: 30px;
+  border: 2px solid rgba(201,146,58,0.18); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+  background: var(--lapis-mid); border: 1px solid var(--border-dark);
+  color: var(--text-on-dark); padding: 11px 20px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 600; z-index: 500; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
+  box-shadow: var(--shadow-deep);
+}
+.toast.show { opacity: 1; }
+
+@media (max-width:480px) {
+  .study-card { padding: 30px 18px 26px; }
+  .card-word { font-size: 2.4rem; }
+  .mc-opts { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-field.full { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <svg class="star-svg" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M28 3 L34 15 L47 9 L41 22 L53 28 L41 34 L47 47 L34 41 L28 53 L22 41 L9 47 L15 34 L3 28 L15 22 L9 9 L22 15 Z" fill="none" stroke="#C9923A" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M28 13 L32.5 22 L43 25.5 L35.5 33 L37.5 44 L28 39.5 L18.5 44 L20.5 33 L13 25.5 L23.5 22 Z" fill="rgba(201,146,58,0.12)" stroke="rgba(201,146,58,0.6)" stroke-width="0.7"/>
+      <circle cx="28" cy="28" r="4.5" fill="rgba(201,146,58,0.25)" stroke="#C9923A" stroke-width="0.9"/>
+    </svg>
+    <h1>Türkçe</h1>
+    <p class="login-tagline">vocabulario · español &amp; turco</p>
+    <div class="login-frame">
+      <label class="login-label">Tu nombre de usuario</label>
+      <input type="text" id="username-input" placeholder="ör. fatma, brandon, ali..." maxlength="30" autocomplete="off">
+      <span class="login-error" id="login-error"></span>
+      <button class="btn-gold" onclick="login()">Entrar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="app-header">
+    <div class="app-logo">✦ Türkçe</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="username-display"></span>
+      </div>
+      <button class="btn-logout" onclick="logout()">salir</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-study" onclick="showTab('study')">
+      📖 Estudiar <span class="due-badge" id="due-badge">0</span>
+    </button>
+    <button class="nav-tab" id="tab-library" onclick="showTab('library')">📚 Biblioteca</button>
+    <button class="nav-tab" id="tab-dashboard" onclick="showTab('dashboard')">📊 Progreso</button>
+  </div>
+
+  <!-- STUDY -->
+  <div id="section-study" class="section">
+    <div id="study-loading" class="loading"><div class="spinner"></div>Cargando sesión...</div>
+    <div id="study-content" style="display:none"></div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div id="section-library" class="section" style="display:none">
+    <div class="lib-top">
+      <h2>Biblioteca de palabras</h2>
+      <div class="lib-actions">
+        <button class="btn-ghost" onclick="openImport()">⬆ Importar mazo</button>
+        <button class="btn-ghost" onclick="exportDeck()">⬇ Exportar mazo</button>
+        <button class="btn-gold" style="width:auto;padding:9px 17px;font-size:13px" onclick="toggleAddForm()">+ Nueva palabra</button>
+      </div>
+    </div>
+
+    <div class="panel add-word-panel" id="add-word-panel">
+      <div class="add-word-inner">
+        <div class="panel-title" id="form-title">Nueva palabra</div>
+        <input type="hidden" id="edit-word-id">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Turco *</label>
+            <input type="text" id="f-turkish" placeholder="ör. merhaba">
+          </div>
+          <div class="form-field">
+            <label>Español *</label>
+            <input type="text" id="f-spanish" placeholder="ej. hola">
+          </div>
+          <div class="form-field">
+            <label>Categoría</label>
+            <select id="f-category">
+              <option value="">Sin categoría</option>
+              <option value="verbo">Verbo</option>
+              <option value="sustantivo">Sustantivo</option>
+              <option value="adjetivo">Adjetivo</option>
+              <option value="adverbio">Adverbio</option>
+              <option value="expresión">Expresión</option>
+              <option value="número">Número</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Nota gramatical</label>
+            <input type="text" id="f-grammar" placeholder="ör. raíz: git-, pres: gidiyorum">
+          </div>
+          <div class="form-field full">
+            <label>Ejemplo de uso</label>
+            <input type="text" id="f-example" placeholder="ör. Merhaba, nasılsın?">
+          </div>
+          <div class="form-field full">
+            <label>Mnemotécnica</label>
+            <input type="text" id="f-mnemonic" placeholder="Asociación personal para recordarla">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" onclick="cancelForm()">Cancelar</button>
+          <button class="btn-gold" style="width:auto;padding:10px 22px;font-size:13px" onclick="saveWord()">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="lib-filters">
+      <input type="text" class="search-input" id="lib-search" placeholder="Buscar palabras..." oninput="renderLibrary()">
+      <select class="filter-sel" id="lib-cat" onchange="renderLibrary()">
+        <option value="">Todas</option>
+        <option value="verbo">Verbos</option>
+        <option value="sustantivo">Sustantivos</option>
+        <option value="adjetivo">Adjetivos</option>
+        <option value="adverbio">Adverbios</option>
+        <option value="expresión">Expresiones</option>
+        <option value="número">Números</option>
+        <option value="otro">Otros</option>
+      </select>
+    </div>
+
+    <div class="word-list" id="word-list">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section" style="display:none">
+    <h2 class="dash-title">Tu progreso</h2>
+    <div id="dashboard-content"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT -->
+<div class="modal-overlay" id="import-modal" style="display:none" onclick="if(event.target===this)closeImport()">
+  <div class="modal panel">
+    <h3>Importar mazo</h3>
+    <p>Pega el JSON del mazo. Las palabras nuevas se agregan a la biblioteca compartida; las duplicadas se omiten.</p>
+    <textarea id="import-json" placeholder='[{"turkish":"merhaba","spanish":"hola",...}]'></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImport()">Cancelar</button>
+      <button class="btn-gold" style="width:auto;padding:10px 22px;font-size:13px" onclick="importDeck()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  CONFIGURA AQUÍ TUS CREDENCIALES DE SUPABASE
+//  Reemplaza los valores y sube el archivo a GitHub
+// ════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://clwwraziutpatlsffdby.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_C5swv9CF3lpzJwpmmgxv8g_09bIQSl3';
+// ════════════════════════════════════════════════════
+
+let sb, currentUser, allWords=[], userProgress={}, studyQueue=[], studyIndex=0, sessionDir='tr-es';
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (!SUPABASE_URL.startsWith('http')) {
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('login-screen').innerHTML=`<div class="login-card">
+      <h1 style="font-size:1.4rem;color:#E87070">Falta configuración</h1>
+      <p style="color:var(--text-muted);font-size:13.5px;margin-top:14px;line-height:1.8">
+        Abre <code>turkce.html</code> en un editor de texto y reemplaza<br>
+        <code>PEGA_TU_PROJECT_URL_AQUI</code> y <code>PEGA_TU_ANON_KEY_AQUI</code><br>
+        con tus credenciales de Supabase.<br><br>
+        Sigue las instrucciones del <strong>README.md</strong>.
+      </p></div>`;
+    return;
+  }
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const saved = localStorage.getItem('turkce_user');
+  if (saved) { currentUser=saved; startApp(); }
+  else document.getElementById('login-screen').style.display='flex';
+});
+
+// AUTH
+function login() {
+  const v=document.getElementById('username-input').value.trim().toLowerCase();
+  if (v.length<2){document.getElementById('login-error').textContent='Mínimo 2 caracteres';return;}
+  currentUser=v; localStorage.setItem('turkce_user',v);
+  document.getElementById('login-screen').style.display='none';
+  startApp();
+}
+function logout(){
+  currentUser=null; localStorage.removeItem('turkce_user');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('username-input').value='';
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    const inp=document.getElementById('username-input');
+    if(inp) inp.addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+  },200);
+});
+
+// START
+async function startApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-avatar').textContent=currentUser.charAt(0).toUpperCase();
+  document.getElementById('username-display').textContent=currentUser;
+  const last=localStorage.getItem('turkce_dir_'+currentUser)||'es-tr';
+  sessionDir=last==='tr-es'?'es-tr':'tr-es';
+  localStorage.setItem('turkce_dir_'+currentUser,sessionDir);
+  await loadData();
+}
+async function loadData(){
+  const[{data:words},{data:progress}]=await Promise.all([
+    sb.from('words').select('*').order('created_at',{ascending:false}),
+    sb.from('progress').select('*').eq('username',currentUser)
+  ]);
+  allWords=words||[]; userProgress={};
+  (progress||[]).forEach(p=>{userProgress[p.word_id]=p;});
+  buildStudyQueue(); updateDueBadge(); renderStudy();
+}
+
+// SM-2
+function sm2(q,reps,ef,iv){
+  if(q===0)return{repetitions:0,ease_factor:ef,interval_days:1,next_review:dfn(1)};
+  const ni=reps===0?1:reps===1?3:Math.round(iv*ef);
+  const qm=q===1?2:q===2?3:4;
+  const nef=Math.max(1.3,ef+0.1-(5-qm)*(0.08+(5-qm)*0.02));
+  return{repetitions:reps+1,ease_factor:parseFloat(nef.toFixed(4)),interval_days:ni,next_review:dfn(ni)};
+}
+function dfn(d){const dt=new Date();dt.setDate(dt.getDate()+d);return dt.toISOString().split('T')[0];}
+function today(){return new Date().toISOString().split('T')[0];}
+function isDue(id){const p=userProgress[id];return!p||p.next_review<=today();}
+function getMode(id){const r=userProgress[id]?.repetitions||0;return r===0?'mc':r<=4?'written':'mental';}
+
+// STUDY
+function buildStudyQueue(){
+  studyQueue=allWords.filter(w=>isDue(w.id)).sort(()=>Math.random()-.5);
+  studyIndex=0;
+}
+function updateDueBadge(){
+  const b=document.getElementById('due-badge'),n=studyQueue.length;
+  b.textContent=n>99?'99+':n; b.style.display=n>0?'inline':'none';
+}
+function renderStudy(){
+  document.getElementById('study-loading').style.display='none';
+  document.getElementById('study-content').style.display='block';
+  const c=document.getElementById('study-content');
+  if(allWords.length===0){
+    c.innerHTML=`<div class="panel study-card"><div class="study-empty"><div class="empty-icon">🌙</div>
+      <div class="empty-title">Biblioteca vacía</div>
+      <p class="empty-body">Agrega tu primera palabra en Biblioteca<br>y comienza tu viaje con el turco.</p>
+    </div></div>`;return;
+  }
+  if(studyQueue.length===0||studyIndex>=studyQueue.length){
+    c.innerHTML=`<div class="panel study-card"><div class="study-empty"><div class="empty-icon">✦</div>
+      <div class="empty-title">${studyQueue.length===0?'¡Todo al día!':'Sesión completada'}</div>
+      <p class="empty-body">${studyQueue.length===0?'Sin revisiones pendientes.<br>Agrega palabras nuevas o vuelve mañana.'
+        :`Revisaste ${studyIndex} palabra${studyIndex!==1?'s':''} hoy.<br>${sessionDir==='tr-es'?'Turco → Español':'Español → Turco'}`}</p>
+      ${studyIndex>0?`<br><button class="btn-gold" style="width:auto;padding:12px 28px;margin-top:18px" onclick="buildStudyQueue();renderStudy()">Nueva ronda</button>`:''}
+    </div></div>`;return;
+  }
+  const w=studyQueue[studyIndex], mode=getMode(w.id), total=studyQueue.length;
+  const pct=Math.round(studyIndex/total*100), isTR=sessionDir==='tr-es';
+  const prompt=isTR?w.turkish:w.spanish, answer=isTR?w.spanish:w.turkish;
+  const mL={mc:'Selección múltiple',written:'Escrito',mental:'Mental'}[mode];
+  let qHTML='';
+  if(mode==='mc'){
+    const opts=buildMCOpts(w,answer,isTR);
+    qHTML=`<div class="mc-opts">${opts.map(o=>`<button class="mc-opt" onclick="handleMC(this,'${ea(o)}','${ea(answer)}','${w.id}')">${eh(o)}</button>`).join('')}</div>`;
+  }else if(mode==='written'){
+    qHTML=`<div class="written-wrap">
+      <input type="text" class="written-input" id="wans" placeholder="Escribe tu respuesta..." autocomplete="off">
+      <div class="written-fb" id="wfb"></div><br>
+      <button class="btn-teal" onclick="checkWritten('${ea(answer)}','${w.id}')">Verificar</button>
+    </div>`;
+  }else{
+    qHTML=`<div>
+      <button class="btn-reveal" onclick="rvMental()">Revelar respuesta</button>
+      <div id="mrev" style="display:none">
+        <div class="answer-reveal">
+          <div class="answer-word">${eh(answer)}</div>
+          ${w.grammar_note?`<div class="answer-note">📖 ${eh(w.grammar_note)}</div>`:''}
+          ${w.mnemonic?`<div class="answer-note">💡 ${eh(w.mnemonic)}</div>`:''}
+        </div>
+        <div class="rating-wrap">
+          <button class="btn-rate r0" onclick="rate(0,'${w.id}')">✕<span class="rl">No supe</span></button>
+          <button class="btn-rate r1" onclick="rate(1,'${w.id}')">~<span class="rl">Difícil</span></button>
+          <button class="btn-rate r2" onclick="rate(2,'${w.id}')">✓<span class="rl">Bien</span></button>
+          <button class="btn-rate r3" onclick="rate(3,'${w.id}')">★<span class="rl">Fácil</span></button>
+        </div>
+      </div></div>`;
+  }
+  c.innerHTML=`
+    <div class="study-header">
+      <div class="study-counter">${studyIndex+1} / ${total}</div>
+      <div class="study-chips">
+        <span class="chip chip-mode">${mL}</span>
+        <span class="chip chip-dir">${isTR?'TR→ES':'ES→TR'}</span>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="panel study-card">
+      <div class="card-lang">${isTR?'Turco':'Español'}</div>
+      ${w.category?`<div class="card-cat">${w.category}</div>`:''}
+      <div class="card-word">${eh(prompt)}</div>
+      ${w.example?`<div class="card-divider">✦</div><div class="card-example">${eh(w.example)}</div>`:''}
+      ${qHTML}
+    </div>`;
+  if(mode==='written')setTimeout(()=>{
+    const inp=document.getElementById('wans');
+    if(inp){inp.focus();inp.addEventListener('keydown',e=>{if(e.key==='Enter')checkWritten(answer,w.id);});}
+  },80);
+}
+function buildMCOpts(w,correct,isTR){
+  const pool=allWords.filter(x=>x.id!==w.id).sort(()=>Math.random()-.5).slice(0,3);
+  return[...pool.map(x=>isTR?x.spanish:x.turkish),correct].sort(()=>Math.random()-.5);
+}
+function handleMC(btn,chosen,correct,wid){
+  document.querySelectorAll('.mc-opt').forEach(b=>b.disabled=true);
+  const ok=norm(chosen)===norm(correct);
+  btn.classList.add(ok?'ok':'no');
+  if(!ok)document.querySelectorAll('.mc-opt').forEach(b=>{if(norm(b.textContent.trim())===norm(correct))b.classList.add('ok');});
+  setTimeout(()=>applyProgress(wid,ok?2:0),900);
+}
+function checkWritten(correct,wid){
+  const inp=document.getElementById('wans'),fb=document.getElementById('wfb');
+  const val=inp.value.trim(); if(!val)return;
+  const ok=fuzzy(val,correct);
+  inp.classList.add(ok?'ok':'no'); inp.disabled=true;
+  if(ok){fb.className='written-fb ok';fb.textContent='✓ Correcto';}
+  else{fb.className='written-fb no';fb.innerHTML=`✕ Era: <strong>${eh(correct)}</strong>`;}
+  setTimeout(()=>applyProgress(wid,ok?2:0),1200);
+}
+function rvMental(){document.querySelector('.btn-reveal').style.display='none';document.getElementById('mrev').style.display='block';}
+function rate(q,wid){applyProgress(wid,q);}
+async function applyProgress(wid,quality){
+  const ex=userProgress[wid];
+  const res=sm2(quality,ex?.repetitions||0,ex?.ease_factor||2.5,ex?.interval_days||1);
+  const data={username:currentUser,word_id:wid,...res,last_reviewed:new Date().toISOString()};
+  if(ex)await sb.from('progress').update(data).eq('username',currentUser).eq('word_id',wid);
+  else await sb.from('progress').insert(data);
+  userProgress[wid]={...ex,...data};
+  studyIndex++; updateDueBadge(); updateStreak(); renderStudy();
+}
+
+// LIBRARY
+function toggleAddForm(){
+  const p=document.getElementById('add-word-panel');
+  if(p.classList.contains('open')){cancelForm();}
+  else{
+    document.getElementById('form-title').textContent='Nueva palabra';
+    document.getElementById('edit-word-id').value='';
+    clearForm(); p.classList.add('open');
+    setTimeout(()=>document.getElementById('f-turkish').focus(),50);
+  }
+}
+function cancelForm(){document.getElementById('add-word-panel').classList.remove('open');clearForm();}
+function clearForm(){
+  ['f-turkish','f-spanish','f-grammar','f-example','f-mnemonic'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const c=document.getElementById('f-category');if(c)c.value='';
+}
+async function saveWord(){
+  const tr=document.getElementById('f-turkish').value.trim();
+  const es=document.getElementById('f-spanish').value.trim();
+  if(!tr||!es){showToast('Turco y Español son obligatorios');return;}
+  const eid=document.getElementById('edit-word-id').value;
+  const data={turkish:tr,spanish:es,
+    category:document.getElementById('f-category').value||null,
+    example:document.getElementById('f-example').value.trim()||null,
+    grammar_note:document.getElementById('f-grammar').value.trim()||null,
+    mnemonic:document.getElementById('f-mnemonic').value.trim()||null,
+    created_by:currentUser};
+  if(eid){
+    await sb.from('words').update(data).eq('id',eid);
+    const i=allWords.findIndex(w=>w.id===eid);if(i!==-1)allWords[i]={...allWords[i],...data};
+    showToast('Palabra actualizada ✓');
+  }else{
+    const{data:ins}=await sb.from('words').insert(data).select().single();
+    if(ins)allWords.unshift(ins);
+    showToast('Palabra agregada ✓');
+  }
+  cancelForm(); renderLibrary(); buildStudyQueue(); updateDueBadge();
+}
+function editWord(id){
+  const w=allWords.find(x=>x.id===id);if(!w)return;
+  document.getElementById('form-title').textContent='Editar palabra';
+  document.getElementById('edit-word-id').value=w.id;
+  document.getElementById('f-turkish').value=w.turkish;
+  document.getElementById('f-spanish').value=w.spanish;
+  document.getElementById('f-category').value=w.category||'';
+  document.getElementById('f-example').value=w.example||'';
+  document.getElementById('f-grammar').value=w.grammar_note||'';
+  document.getElementById('f-mnemonic').value=w.mnemonic||'';
+  document.getElementById('add-word-panel').classList.add('open');
+  document.getElementById('add-word-panel').scrollIntoView({behavior:'smooth'});
+}
+async function deleteWord(id){
+  if(!confirm('¿Eliminar? Se borrará el progreso de todos los usuarios.'))return;
+  await sb.from('progress').delete().eq('word_id',id);
+  await sb.from('words').delete().eq('id',id);
+  allWords=allWords.filter(w=>w.id!==id); delete userProgress[id];
+  renderLibrary(); buildStudyQueue(); updateDueBadge(); showToast('Eliminada');
+}
+function renderLibrary(){
+  const search=(document.getElementById('lib-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('lib-cat')?.value||'';
+  const filtered=allWords.filter(w=>
+    (!search||w.turkish.toLowerCase().includes(search)||w.spanish.toLowerCase().includes(search))&&
+    (!cat||w.category===cat));
+  const list=document.getElementById('word-list');
+  if(!filtered.length){
+    list.innerHTML=`<div class="word-empty">${allWords.length===0?'¡Agrega tu primera palabra arriba!':'Sin resultados.'}</div>`;return;
+  }
+  list.innerHTML=filtered.map(w=>{
+    const r=userProgress[w.id]?.repetitions||0;
+    const dc=r===0?'dn':r<=4?'dl':r<=8?'dr':'dm';
+    const dt=r===0?'Nueva':r<=4?'Aprendiendo':r<=8?'Revisando':'Dominada';
+    return`<div class="word-item">
+      <div class="w-dot ${dc}" title="${dt}"></div>
+      <div class="word-main">
+        <div class="word-tr">${eh(w.turkish)}</div>
+        <div class="word-es">${eh(w.spanish)}${w.grammar_note?' · '+eh(w.grammar_note):''}</div>
+      </div>
+      <div class="word-meta">
+        ${w.category?`<span class="cat-pill">${w.category}</span>`:''}
+        <button class="btn-icon" onclick="editWord('${w.id}')" title="Editar">✏️</button>
+        <button class="btn-icon del" onclick="deleteWord('${w.id}')" title="Eliminar">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// IMPORT / EXPORT
+function exportDeck(){
+  dlJSON(allWords.map(w=>({turkish:w.turkish,spanish:w.spanish,category:w.category,example:w.example,grammar_note:w.grammar_note,mnemonic:w.mnemonic})),'turkce-mazo.json');
+  showToast('Mazo exportado ✓');
+}
+function openImport(){document.getElementById('import-modal').style.display='flex';}
+function closeImport(){document.getElementById('import-modal').style.display='none';document.getElementById('import-json').value='';}
+async function importDeck(){
+  let deck;try{deck=JSON.parse(document.getElementById('import-json').value.trim());}catch{showToast('JSON inválido');return;}
+  if(!Array.isArray(deck)){showToast('Debe ser un arreglo');return;}
+  const ex=new Set(allWords.map(w=>w.turkish.toLowerCase()));
+  const toAdd=deck.filter(w=>w.turkish&&w.spanish&&!ex.has(w.turkish.toLowerCase()))
+    .map(w=>({turkish:w.turkish,spanish:w.spanish,category:w.category||null,example:w.example||null,grammar_note:w.grammar_note||null,mnemonic:w.mnemonic||null,created_by:currentUser}));
+  if(!toAdd.length){showToast('No hay palabras nuevas');return;}
+  const{data}=await sb.from('words').insert(toAdd).select();
+  if(data)allWords=[...data,...allWords];
+  closeImport(); renderLibrary(); buildStudyQueue(); updateDueBadge();
+  showToast(`${toAdd.length} palabras importadas ✓`);
+}
+function dlJSON(d,n){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=n;a.click();}
+
+// DASHBOARD
+function renderDashboard(){
+  const total=allWords.length;
+  let nw=0,le=0,rv=0,ms=0;
+  allWords.forEach(w=>{const r=userProgress[w.id]?.repetitions||0;if(r===0)nw++;else if(r<=4)le++;else if(r<=8)rv++;else ms++;});
+  const due=studyQueue.length,streak=getStreak();
+  const segs=total>0?[
+    {pct:nw/total*100,color:'rgba(138,155,181,0.4)',label:'Nuevas',count:nw},
+    {pct:le/total*100,color:'var(--gold)',label:'Aprendiendo',count:le},
+    {pct:rv/total*100,color:'var(--turq-light)',label:'Revisando',count:rv},
+    {pct:ms/total*100,color:'#7CB87C',label:'Dominadas',count:ms}
+  ]:[];
+  document.getElementById('dashboard-content').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card sg"><div class="stat-number">${total}</div><div class="stat-label">Palabras</div></div>
+      <div class="stat-card sc"><div class="stat-number">${due}</div><div class="stat-label">Pendientes</div></div>
+      <div class="stat-card sv"><div class="stat-number">${ms}</div><div class="stat-label">Dominadas</div></div>
+      <div class="stat-card st"><div class="stat-number">${streak}</div><div class="stat-label">Días racha</div></div>
+    </div>
+    <div class="dash-sec">Racha de estudio</div>
+    <div class="panel streak-card">
+      <div class="streak-flame">🔥</div>
+      <div><div class="streak-num">${streak} ${streak===1?'día':'días'}</div><div class="streak-sub">consecutivos</div></div>
+    </div>
+    ${total>0?`
+    <div class="dash-sec">Distribución</div>
+    <div class="panel dist-wrap">
+      <div class="dist-bar">${segs.map(s=>`<div class="dist-seg" style="width:${s.pct.toFixed(1)}%;background:${s.color}"></div>`).join('')}</div>
+      <div class="dist-legend">${segs.map(s=>`<div class="leg-item"><div class="leg-dot" style="background:${s.color}"></div>${s.label}: ${s.count}</div>`).join('')}</div>
+    </div>`:''}
+    <div style="margin-top:22px;display:flex;justify-content:flex-end">
+      <button class="btn-ghost" onclick="exportBackup()">⬇ Respaldo personal</button>
+    </div>`;
+}
+function exportBackup(){dlJSON({user:currentUser,exported:new Date().toISOString(),words:allWords,progress:Object.values(userProgress)},`turkce-respaldo-${currentUser}.json`);showToast('Respaldo exportado ✓');}
+
+// STREAK
+function updateStreak(){
+  const k=`ts_${currentUser}`,t=today();
+  let d=JSON.parse(localStorage.getItem(k)||'{"last":"","count":0}');
+  if(d.last===t)return;
+  const y=new Date();y.setDate(y.getDate()-1);
+  d.count=d.last===y.toISOString().split('T')[0]?d.count+1:1;
+  d.last=t; localStorage.setItem(k,JSON.stringify(d));
+}
+function getStreak(){
+  const k=`ts_${currentUser}`;
+  const d=JSON.parse(localStorage.getItem(k)||'{"last":"","count":0}'),t=today();
+  const y=new Date();y.setDate(y.getDate()-1);
+  return(d.last===t||d.last===y.toISOString().split('T')[0])?d.count:0;
+}
+
+// NAV
+function showTab(tab){
+  ['study','library','dashboard'].forEach(t=>{
+    document.getElementById(`section-${t}`).style.display=t===tab?'block':'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);
+  });
+  if(tab==='library')renderLibrary();
+  if(tab==='dashboard')renderDashboard();
+}
+
+// UTILS
+function norm(s){return s.toLowerCase().trim().replace(/ğ/g,'g').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ç/g,'c');}
+function fuzzy(a,b){const x=norm(a),y=norm(b);return x===y||(y.length>4&&lev(x,y)<=1);}
+function lev(a,b){const m=a.length,n=b.length,dp=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);for(let j=0;j<=n;j++)dp[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
+function eh(s){return s?(''+(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function ea(s){return s?(''+(s)).replace(/\\/g,'\\\\').replace(/'/g,"\\'"):''}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
